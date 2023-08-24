@@ -1,0 +1,3 @@
+Ich brauche ein Gateway esp32 Device, welches ein Internet Verbindung bietet.
+Ich brauche ein rcp Device, c6 oder h2
+Zwischen beide eine UART Kommunikation.
