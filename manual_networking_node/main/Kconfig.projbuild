@@ -2,7 +2,7 @@ menu "Example Configuration"
 
     choice
         bool "Device type"
-        default MESH_SET_ROOT
+        default MESH_SET_NODE
         help
             Device type (root or node).
 
@@ -21,13 +21,13 @@ menu "Example Configuration"
 
     config MESH_ROUTER_SSID
         string "Router SSID"
-        default "moto g31(w)_9569"
+        default "ROUTER_SSID"
         help
             Router SSID.
 
     config MESH_ROUTER_PASSWD
         string "Router password"
-        default "w4aqipb7h5eqt5e"
+        default "ROUTER_PASSWD"
         help
             Router password.
 
