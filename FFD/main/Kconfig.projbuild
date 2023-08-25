@@ -1,0 +1,10 @@
+menu "Example Configuration"
+
+  config ZB_RCP
+        bool "Zigbee Radio Co-processor device"
+        depends on <choice ZB_DEVICE_TYPE>
+        help
+          Select this to enable Zigbee Radio Only device which can only forward 802.15.4 packets to t
+          The Zigbee stack will be run on the host SoC.
+
+endmenu

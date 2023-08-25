@@ -1,3 +1,14 @@
+Swicht Light Expamle should be worked with following 4 steps.
+1. Connect two RFD on a COORDINATOR. Light can be controled with 2 RFD.
+2. Create a FFD device. This connects on a COORDINATOR.
+3. RFD connects on a root device, FFD device on a COORDINATOR. Light can be controled with RFD device.
+4. 2 RFD connect on a root device, FFD device on a COORDINATOR. Light can be controled with RFD device.
+
+root, node and coordinator devices will be imlemented static.
+Later device should be choosen self, whether it works on root and node mode
+
 Ich brauche ein Gateway esp32 Device, welches ein Internet Verbindung bietet.
 Ich brauche ein rcp Device, c6 oder h2
 Zwischen beide eine UART Kommunikation.
+
+

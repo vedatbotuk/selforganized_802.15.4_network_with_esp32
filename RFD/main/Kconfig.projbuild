@@ -1,0 +1,9 @@
+menu "Example Configuration"
+
+  config ZB_ZED
+        bool "Zigbee End Device"
+        depends on <choice ZB_DEVICE_TYPE>
+        help
+          Select this to enable Zigbee End Device.
+
+endmenu
