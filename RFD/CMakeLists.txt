@@ -5,4 +5,4 @@ set(EXTRA_COMPONENT_DIRS
     ${CMAKE_CURRENT_SOURCE_DIR}/components/switch_driver
     )
 include($ENV{IDF_PATH}/tools/cmake/project.cmake)
-project(HA_customized_switch)
+project(RFD)

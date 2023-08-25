@@ -1,9 +1,14 @@
-menu "Example Configuration"
+menu "Example Device Configuration"
 
-  config ZB_ZED
+    orsource "$IDF_PATH/examples/common_components/env_caps/$IDF_TARGET/Kconfig.env_caps"
+
+    choice ZB_DEVICE_TYPE
+    
         bool "Zigbee End Device"
-        depends on <choice ZB_DEVICE_TYPE>
-        help
-          Select this to enable Zigbee End Device.
+        default ZB_ZED
+        help 
+            Select this to enable Zigbee End Device.
+
+    endchoice
 
 endmenu
