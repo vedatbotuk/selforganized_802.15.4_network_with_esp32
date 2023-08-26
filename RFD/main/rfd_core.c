@@ -15,7 +15,7 @@
 #include "esp_log.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
-#include "esp_HA_customized_switch.h"
+#include "rfd_core.h"
 #include "nvs_flash.h"
 
 /**
@@ -47,6 +47,8 @@ typedef struct zdo_info_ctx_s {
 /* remote device struct for recording and managing node info */
 light_bulb_device_params_t on_off_light;
 /********************* Define functions **************************/
+// Data will be sent in next section.
+// Here can be implented an counter, which will sent to the host.
 static void esp_zb_buttons_handler(switch_func_pair_t *button_func_pair)
 {
     //by checking the button function pair to call different cmd send

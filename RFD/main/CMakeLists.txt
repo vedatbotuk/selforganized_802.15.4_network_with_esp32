@@ -1,5 +1,5 @@
 idf_component_register(
     SRCS
-    "esp_HA_customized_switch.c"
+    "rfd_core.c"
     INCLUDE_DIRS "."
 )
