@@ -2,7 +2,7 @@
 # in this exact order for cmake to work correctly
 cmake_minimum_required(VERSION 3.16)
 set(EXTRA_COMPONENT_DIRS
-    ${CMAKE_CURRENT_SOURCE_DIR}/components/switch_driver
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../common/light_driver
     )
 include($ENV{IDF_PATH}/tools/cmake/project.cmake)
-project(rfd_core)
+project(esp_HA_customized_light)
