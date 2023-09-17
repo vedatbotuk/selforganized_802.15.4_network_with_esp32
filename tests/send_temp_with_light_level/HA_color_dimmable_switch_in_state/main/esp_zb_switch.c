@@ -44,8 +44,8 @@ void update_attribute()
     {
         temperature = rand() % (3000 + 1 - 1000);
 
-        ESP_LOGI("DEMO MODE", "Temp = %d", temperature);
-    vTaskDelay(1000 / portTICK_PERIOD_MS);
+//        ESP_LOGI("DEMO MODE", "Temp = %d", temperature);
+        vTaskDelay(1000 / portTICK_PERIOD_MS);
     }  
 }
 
@@ -55,7 +55,8 @@ static void esp_zb_buttons_handler(switch_func_pair_t *button_func_pair)
         cmd_level.zcl_basic_cmd.src_endpoint = HA_COLOR_DIMMABLE_SWITCH_ENDPOINT;
         cmd_level.address_mode = ESP_ZB_APS_ADDR_MODE_DST_ADDR_ENDP_NOT_PRESENT;
         cmd_level.level = temperature;
-//        cmd_level.transition_time = 0xffff;
+        // Transition_time is necessary for correct value
+        cmd_level.transition_time = 0xffff;
         ESP_EARLY_LOGI(TAG, "Send temeperature value: %d ", temperature);
         esp_zb_zcl_level_move_to_level_with_onoff_cmd_req(&cmd_level);
 }
