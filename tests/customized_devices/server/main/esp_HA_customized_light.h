@@ -19,12 +19,24 @@
 #define MAX_CHILDREN                    10          /* the max amount of connected devices */
 #define INSTALLCODE_POLICY_ENABLE       false    /* enable the install code policy for security */
 #define HA_ESP_LIGHT_ENDPOINT           10          /* esp light bulb device endpoint */
-#define HA_ESP_TEMP_ENDPOINT            10
 #define ESP_ZB_PRIMARY_CHANNEL_MASK     (1l << 13)  /* Zigbee primary channel mask use in the example */
+#define MANUFACTURER_NAME               "Lmahmutov"
+#define MODEL_NAME                      "Air Sensor 1.0"
+#define FIRMWARE_VERSION                "ver-0.1"
+
 
 #define ESP_ZB_ZC_CONFIG()                                                              \
     {                                                                                   \
         .esp_zb_role = ESP_ZB_DEVICE_TYPE_COORDINATOR,                                  \
+        .install_code_policy = INSTALLCODE_POLICY_ENABLE,                               \
+        .nwk_cfg.zczr_cfg = {                                                           \
+            .max_children = MAX_CHILDREN,                                               \
+        },                                                                              \
+    }
+
+#define ESP_ZB_ZR_CONFIG()                                                              \
+    {                                                                                   \
+        .esp_zb_role = ESP_ZB_DEVICE_TYPE_ROUTER,                                       \
         .install_code_policy = INSTALLCODE_POLICY_ENABLE,                               \
         .nwk_cfg.zczr_cfg = {                                                           \
             .max_children = MAX_CHILDREN,                                               \
