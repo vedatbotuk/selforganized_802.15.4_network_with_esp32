@@ -31,8 +31,6 @@ static switch_func_pair_t button_func_pair[] = {
     {GPIO_INPUT_IO_TOGGLE_SWITCH, SWITCH_ONOFF_TOGGLE_CONTROL}
 };
 
-uint16_t CO2_value = 0;
-
 typedef struct light_bulb_device_params_s {
     esp_zb_ieee_addr_t ieee_addr;
     uint8_t  endpoint;
@@ -47,17 +45,31 @@ typedef struct zdo_info_ctx_s {
 /* remote device struct for recording and managing node info */
 light_bulb_device_params_t on_off_light;
 
+uint8_t temperature = 0;
+
+void update_attribute()
+{
+    while (1)
+    {
+        temperature = rand() % (3000 + 1 - 1000);
+
+//        ESP_LOGI("DEMO MODE", "Temp = %d", temperature);
+        vTaskDelay(1000 / portTICK_PERIOD_MS);
+    }  
+}
+
 static void esp_zb_buttons_handler(switch_func_pair_t *button_func_pair)
 {
-    switch (button_func_pair->func) {
-    case SWITCH_ONOFF_TOGGLE_CONTROL: {
-        /* send on-off toggle command to remote device */
-        ESP_EARLY_LOGI(TAG, "Send 'on_off toggle' command to address(0x%x) endpoint(%d)", on_off_light.short_addr, on_off_light.endpoint);
-
-    } break;
-    default:
-        break;
-    }
+    esp_zb_zcl_move_to_level_cmd_t cmd_req;
+    cmd_req.zcl_basic_cmd.dst_addr_u.addr_short = on_off_light.short_addr;
+    cmd_req.zcl_basic_cmd.dst_endpoint = on_off_light.endpoint;
+    cmd_req.zcl_basic_cmd.src_endpoint = HA_ONOFF_SWITCH_ENDPOINT;
+    cmd_req.address_mode = ESP_ZB_APS_ADDR_MODE_16_ENDP_PRESENT;
+    cmd_req.level = temperature;
+    // Transition_time is necessary for correct value
+    cmd_req.transition_time = 0xffff;
+    ESP_EARLY_LOGI(TAG, "Send temeperature value: %d ", temperature);
+    esp_zb_zcl_level_move_to_level_with_onoff_cmd_req(&cmd_req);
 }
 
 static void bdb_start_top_level_commissioning_cb(uint8_t mode_mask)
@@ -77,13 +89,12 @@ static void bind_cb(esp_zb_zdp_status_t zdo_status, void *user_ctx)
         report_cmd.zcl_basic_cmd.dst_endpoint = on_off_light.endpoint;
         report_cmd.zcl_basic_cmd.src_endpoint = HA_ONOFF_SWITCH_ENDPOINT;
         report_cmd.address_mode = ESP_ZB_APS_ADDR_MODE_16_ENDP_PRESENT;
-        report_cmd.clusterID = ESP_ZB_ZCL_CLUSTER_ID_TEMP_MEASUREMENT;
-        report_cmd.attributeID = ESP_ZB_ZCL_ATTR_TEMP_MEASUREMENT_VALUE_ID;
-        report_cmd.attrType = ESP_ZB_ZCL_ATTR_TYPE_U16;
+        report_cmd.clusterID = ESP_ZB_ZCL_CLUSTER_ID_LEVEL_CONTROL;
+        report_cmd.attributeID = ESP_ZB_ZCL_ATTR_LEVEL_CONTROL_CURRENT_LEVEL_ID;
+        report_cmd.attrType = ESP_ZB_ZCL_ATTR_TYPE_U8;
         report_cmd.min_interval = 0;
         report_cmd.max_interval = 30;
         report_cmd.reportable_change = (void*)&report_change;
-        ESP_EARLY_LOGI(TAG, "////bind_cb");
         esp_zb_zcl_config_report_cmd_req(&report_cmd);
     }
 }
@@ -99,7 +110,7 @@ static void ieee_cb(esp_zb_zdp_status_t zdo_status, esp_zb_ieee_addr_t ieee_addr
         esp_zb_zdo_bind_req_param_t bind_req;
         memcpy(&(bind_req.src_address), on_off_light.ieee_addr, sizeof(esp_zb_ieee_addr_t));
         bind_req.src_endp = on_off_light.endpoint;
-        bind_req.cluster_id = ESP_ZB_ZCL_CLUSTER_ID_TEMP_MEASUREMENT;
+        bind_req.cluster_id = ESP_ZB_ZCL_CLUSTER_ID_LEVEL_CONTROL;
         bind_req.dst_addr_mode = ESP_ZB_ZDO_BIND_DST_ADDR_MODE_64_BIT_EXTENDED;
         esp_zb_get_long_address(bind_req.dst_address_u.addr_long);
         bind_req.dst_endp = HA_ONOFF_SWITCH_ENDPOINT;
@@ -158,8 +169,8 @@ static void user_find_cb(esp_zb_zdp_status_t zdo_status, uint16_t addr, uint8_t 
         esp_zb_zdo_ieee_addr_req(&ieee_req, ieee_cb, NULL);
         esp_zb_zcl_read_attr_cmd_t read_req;
         read_req.address_mode = ESP_ZB_APS_ADDR_MODE_16_ENDP_PRESENT;
-        read_req.attributeID = ESP_ZB_ZCL_ATTR_TEMP_MEASUREMENT_VALUE_ID;
-        read_req.clusterID = ESP_ZB_ZCL_CLUSTER_ID_TEMP_MEASUREMENT;
+        read_req.attributeID = ESP_ZB_ZCL_ATTR_LEVEL_CONTROL_CURRENT_LEVEL_ID;
+        read_req.clusterID = ESP_ZB_ZCL_CLUSTER_ID_LEVEL_CONTROL;
         read_req.zcl_basic_cmd.dst_endpoint = on_off_light.endpoint;
         read_req.zcl_basic_cmd.src_endpoint = HA_ONOFF_SWITCH_ENDPOINT;
         read_req.zcl_basic_cmd.dst_addr_u.addr_short = on_off_light.short_addr;
@@ -187,16 +198,12 @@ void esp_zb_app_signal_handler(esp_zb_app_signal_t *signal_struct)
             ESP_LOGI(TAG, "Joined network successfully (Extended PAN ID: %02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x, PAN ID: 0x%04hx, Channel:%d)",
                      extended_pan_id[7], extended_pan_id[6], extended_pan_id[5], extended_pan_id[4],
                      extended_pan_id[3], extended_pan_id[2], extended_pan_id[1], extended_pan_id[0],
-                     esp_zb_get_pan_id(), esp_zb_get_current_channel());          
-            esp_zb_zdo_match_desc_req_param_t find_req;
-            uint16_t cluster_list[] = {ESP_ZB_ZCL_CLUSTER_ID_TEMP_MEASUREMENT};
-            find_req.dst_nwk_addr = 0x0000;
+                     esp_zb_get_pan_id(), esp_zb_get_current_channel());
+            esp_zb_zdo_match_desc_req_param_t  find_req;
             find_req.addr_of_interest = 0x0000;
-            find_req.profile_id = ESP_ZB_AF_HA_PROFILE_ID;
-            find_req.num_in_clusters = 1;
-            find_req.num_out_clusters = 0;
-            find_req.cluster_list = cluster_list;
-            esp_zb_zdo_match_cluster(&find_req, user_find_cb, NULL);
+            find_req.dst_nwk_addr = 0x0000;
+            /* find the match on-off light device */
+            esp_zb_zdo_find_color_dimmable_light(&find_req, user_find_cb, NULL);
         }
         break;
     case ESP_ZB_ZDO_SIGNAL_LEAVE:
@@ -215,15 +222,13 @@ void esp_zb_app_signal_handler(esp_zb_app_signal_t *signal_struct)
 
 static esp_err_t zb_attribute_reporting_handler(const esp_zb_zcl_report_attr_message_t *message)
 {
-
-    ESP_LOGW(TAG, "////esp_zb_zcl_report_attr_message_t: Implement later.");
     ESP_RETURN_ON_FALSE(message, ESP_FAIL, TAG, "Empty message");
     ESP_RETURN_ON_FALSE(message->status == ESP_ZB_ZCL_STATUS_SUCCESS, ESP_ERR_INVALID_ARG, TAG, "Received message: error status(%d)",
                         message->status);
     ESP_LOGI(TAG, "Reveived report from address(0x%x) src endpoint(%d) to dst endpoint(%d) cluster(0x%x)", message->src_address.u.short_addr,
              message->src_endpoint, message->dst_endpoint, message->cluster);
     ESP_LOGI(TAG, "Received report information: attribute(0x%x), type(0x%x), value(%d)\n", message->attribute.id, message->attribute.data.type,
-            *(uint16_t *)message->attribute.data.value);
+             message->attribute.data.value ? *(uint8_t *)message->attribute.data.value : 0);
     return ESP_OK;
 }
 
@@ -231,20 +236,18 @@ static esp_err_t zb_read_attr_resp_handler(const esp_zb_zcl_cmd_read_attr_resp_m
 {
     ESP_RETURN_ON_FALSE(message, ESP_FAIL, TAG, "Empty message");
     ESP_RETURN_ON_FALSE(message->info.status == ESP_ZB_ZCL_STATUS_SUCCESS, ESP_ERR_INVALID_ARG, TAG, "Received message: error status(%d)",
-                      message->info.status);
+                        message->info.status);
     ESP_LOGI(TAG, "Read attribute response: status(%d), cluster(0x%x), attribute(0x%x), type(0x%x), value(%d)", message->info.status,
              message->info.cluster, message->attribute.id, message->attribute.data.type,
-             *(uint16_t *)message->attribute.data.value);
+             message->attribute.data.value ? *(uint8_t *)message->attribute.data.value : 0);
     return ESP_OK;
 }
 
 static esp_err_t zb_configure_report_resp_handler(const esp_zb_zcl_cmd_config_report_resp_message_t *message)
 {
-
     ESP_RETURN_ON_FALSE(message, ESP_FAIL, TAG, "Empty message");
     ESP_RETURN_ON_FALSE(message->info.status == ESP_ZB_ZCL_STATUS_SUCCESS, ESP_ERR_INVALID_ARG, TAG, "Received message: error status(%d)",
                         message->info.status);
-    ESP_LOGI(TAG, "Configure report resp handler: status(%d)", message->info.status);
     ESP_LOGI(TAG, "Configure report response: status(%d), cluster(0x%x), attribute(0x%x)", message->info.status, message->info.cluster,
              message->attribute_id);
     return ESP_OK;
@@ -286,17 +289,17 @@ static void esp_zb_task(void *pvParameters)
     esp_zb_attribute_list_t *esp_zb_identify_cluster = esp_zb_zcl_attr_list_create(ESP_ZB_ZCL_CLUSTER_ID_IDENTIFY);
     esp_zb_identify_cluster_add_attr(esp_zb_identify_cluster, ESP_ZB_ZCL_ATTR_IDENTIFY_IDENTIFY_TIME_ID, &test_attr);
     /* create client role of the cluster */
-    esp_zb_attribute_list_t *esp_zb_on_off_client_cluster = esp_zb_zcl_attr_list_create(ESP_ZB_ZCL_CLUSTER_ID_TEMP_MEASUREMENT);
+    esp_zb_attribute_list_t *esp_zb_on_off_client_cluster = esp_zb_zcl_attr_list_create(ESP_ZB_ZCL_CLUSTER_ID_LEVEL_CONTROL);
     esp_zb_attribute_list_t *esp_zb_identify_client_cluster = esp_zb_zcl_attr_list_create(ESP_ZB_ZCL_CLUSTER_ID_IDENTIFY);
     /* create cluster lists for this endpoint */
     esp_zb_cluster_list_t *esp_zb_cluster_list = esp_zb_zcl_cluster_list_create();
     esp_zb_cluster_list_add_basic_cluster(esp_zb_cluster_list, esp_zb_basic_cluster, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE);
     esp_zb_cluster_list_add_identify_cluster(esp_zb_cluster_list, esp_zb_identify_cluster, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE);
-    esp_zb_cluster_list_add_temperature_meas_cluster(esp_zb_cluster_list, esp_zb_on_off_client_cluster, ESP_ZB_ZCL_CLUSTER_CLIENT_ROLE);
+    esp_zb_cluster_list_add_level_cluster(esp_zb_cluster_list, esp_zb_on_off_client_cluster, ESP_ZB_ZCL_CLUSTER_CLIENT_ROLE);
     esp_zb_cluster_list_add_identify_cluster(esp_zb_cluster_list, esp_zb_identify_client_cluster, ESP_ZB_ZCL_CLUSTER_CLIENT_ROLE);
 
     esp_zb_ep_list_t *esp_zb_ep_list = esp_zb_ep_list_create();
-    esp_zb_ep_list_add_ep(esp_zb_ep_list, esp_zb_cluster_list, HA_ONOFF_SWITCH_ENDPOINT, ESP_ZB_AF_HA_PROFILE_ID, ESP_ZB_HA_TEMPERATURE_SENSOR_DEVICE_ID);
+    esp_zb_ep_list_add_ep(esp_zb_ep_list, esp_zb_cluster_list, HA_ONOFF_SWITCH_ENDPOINT, ESP_ZB_AF_HA_PROFILE_ID, ESP_ZB_HA_LEVEL_CONTROL_SWITCH_DEVICE_ID);
     esp_zb_device_register(esp_zb_ep_list);
     esp_zb_core_action_handler_register(zb_action_handler);
     esp_zb_set_primary_network_channel_set(ESP_ZB_PRIMARY_CHANNEL_MASK);
@@ -314,5 +317,6 @@ void app_main(void)
     ESP_ERROR_CHECK(nvs_flash_init());
     ESP_ERROR_CHECK(esp_zb_platform_config(&config));
     switch_driver_init(button_func_pair, PAIR_SIZE(button_func_pair), esp_zb_buttons_handler);
+    xTaskCreate(update_attribute, "Update_attribute_value", 4096, NULL, 6, NULL);
     xTaskCreate(esp_zb_task, "Zigbee_main", 4096, NULL, 5, NULL);
 }

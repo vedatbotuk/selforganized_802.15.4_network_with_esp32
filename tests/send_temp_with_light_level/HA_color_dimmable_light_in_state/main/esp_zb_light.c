@@ -84,7 +84,7 @@ static esp_err_t zb_attribute_handler(const esp_zb_zcl_set_attr_value_message_t 
             
             light_driver_set_power(1);
             // Blink during get data from client
-            ESP_LOGI(TAG, "Receive temperature value: %d", light_level);
+            ESP_LOGI(TAG, "Receive temperature Value: %d from endpoint(%d)", light_level, message->info.dst_endpoint);
             vTaskDelay(20 / portTICK_PERIOD_MS);
             light_driver_set_power(0);
         } else {
