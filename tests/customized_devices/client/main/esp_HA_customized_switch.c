@@ -301,7 +301,8 @@ static void esp_zb_task(void *pvParameters)
     esp_zb_ep_list_t *esp_zb_ep_list = esp_zb_ep_list_create();
     esp_zb_ep_list_add_ep(esp_zb_ep_list, esp_zb_cluster_list, HA_ONOFF_SWITCH_ENDPOINT, ESP_ZB_AF_HA_PROFILE_ID, ESP_ZB_HA_LEVEL_CONTROL_SWITCH_DEVICE_ID);
     esp_zb_device_register(esp_zb_ep_list);
-    esp_zb_core_action_handler_register(zb_action_handler);
+    //TODO This can be helpful for get routing-data on client.
+    //esp_zb_core_action_handler_register(zb_action_handler);
     esp_zb_set_primary_network_channel_set(ESP_ZB_PRIMARY_CHANNEL_MASK);
     esp_zb_set_secondary_network_channel_set(ESP_ZB_SECONDARY_CHANNEL_MASK);
     ESP_ERROR_CHECK(esp_zb_start(true));
