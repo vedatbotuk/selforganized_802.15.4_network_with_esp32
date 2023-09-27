@@ -26,6 +26,7 @@
 #endif
 
 static const char *TAG = "ESP_HA_ON_OFF_SWITCH";
+static const char *TAG_UPDATE_ATTR = "UPDATE_ATTR";
 
 static switch_func_pair_t button_func_pair[] = {
     {GPIO_INPUT_IO_TOGGLE_SWITCH, SWITCH_ONOFF_TOGGLE_CONTROL}
@@ -46,30 +47,49 @@ typedef struct zdo_info_ctx_s {
 light_bulb_device_params_t on_off_light;
 
 uint8_t temperature = 0;
+bool connected = false;
 
 void update_attribute()
 {
-    while (1)
-    {
-        temperature = rand() % (3000 + 1 - 1000);
-
-//        ESP_LOGI("DEMO MODE", "Temp = %d", temperature);
-        vTaskDelay(1000 / portTICK_PERIOD_MS);
-    }  
+//    vTaskDelay(30000 / portTICK_PERIOD_MS);
+    
+    while (1){
+        if (connected){
+            temperature = rand() % (3000 + 1 - 1000);
+            //ESP_LOGI("DEMO MODE", "Temp = %d", temperature);   
+            esp_zb_zcl_move_to_level_cmd_t cmd_req;
+            cmd_req.zcl_basic_cmd.dst_addr_u.addr_short = on_off_light.short_addr;
+            cmd_req.zcl_basic_cmd.dst_endpoint = on_off_light.endpoint;
+            cmd_req.zcl_basic_cmd.src_endpoint = HA_ONOFF_SWITCH_ENDPOINT;
+            cmd_req.address_mode = ESP_ZB_APS_ADDR_MODE_16_ENDP_PRESENT;
+            cmd_req.level = temperature;
+            // Transition_time is necessary for correct value
+            cmd_req.transition_time = 0xffff;
+            ESP_EARLY_LOGI(TAG_UPDATE_ATTR, "Send temeperature value: %d ", temperature);
+            esp_zb_zcl_level_move_to_level_with_onoff_cmd_req(&cmd_req);   
+        } else {
+            ESP_LOGI(TAG_UPDATE_ATTR, "Device is not connected!");
+            }
+        vTaskDelay(10000 / portTICK_PERIOD_MS);
+    }
 }
+
 
 static void esp_zb_buttons_handler(switch_func_pair_t *button_func_pair)
 {
-    esp_zb_zcl_move_to_level_cmd_t cmd_req;
-    cmd_req.zcl_basic_cmd.dst_addr_u.addr_short = on_off_light.short_addr;
-    cmd_req.zcl_basic_cmd.dst_endpoint = on_off_light.endpoint;
-    cmd_req.zcl_basic_cmd.src_endpoint = HA_ONOFF_SWITCH_ENDPOINT;
-    cmd_req.address_mode = ESP_ZB_APS_ADDR_MODE_16_ENDP_PRESENT;
-    cmd_req.level = temperature;
-    // Transition_time is necessary for correct value
-    cmd_req.transition_time = 0xffff;
-    ESP_EARLY_LOGI(TAG, "Send temeperature value: %d ", temperature);
-    esp_zb_zcl_level_move_to_level_with_onoff_cmd_req(&cmd_req);
+    while(1){
+        esp_zb_zcl_move_to_level_cmd_t cmd_req;
+        cmd_req.zcl_basic_cmd.dst_addr_u.addr_short = on_off_light.short_addr;
+        cmd_req.zcl_basic_cmd.dst_endpoint = on_off_light.endpoint;
+        cmd_req.zcl_basic_cmd.src_endpoint = HA_ONOFF_SWITCH_ENDPOINT;
+        cmd_req.address_mode = ESP_ZB_APS_ADDR_MODE_16_ENDP_PRESENT;
+        cmd_req.level = temperature;
+        // Transition_time is necessary for correct value
+        cmd_req.transition_time = 0xffff;
+        ESP_EARLY_LOGI(TAG, "Send temeperature value: %d ", temperature);
+        esp_zb_zcl_level_move_to_level_with_onoff_cmd_req(&cmd_req);
+        vTaskDelay(10000 / portTICK_PERIOD_MS); // 10 secconds
+    }
 }
 
 static void bdb_start_top_level_commissioning_cb(uint8_t mode_mask)
@@ -189,10 +209,12 @@ void esp_zb_app_signal_handler(esp_zb_app_signal_t *signal_struct)
     case ESP_ZB_BDB_SIGNAL_DEVICE_REBOOT:
     case ESP_ZB_BDB_SIGNAL_STEERING:
         if (err_status != ESP_OK) {
+            connected = false;
             ESP_LOGW(TAG, "Stack %s failure with %s status, steering",esp_zb_zdo_signal_to_string(sig_type), esp_err_to_name(err_status));
             esp_zb_scheduler_alarm((esp_zb_callback_t)bdb_start_top_level_commissioning_cb, ESP_ZB_BDB_MODE_NETWORK_STEERING, 1000);
         } else {
             /* device auto start successfully and on a formed network */
+            connected = true;
             esp_zb_ieee_addr_t extended_pan_id;
             esp_zb_get_extended_pan_id(extended_pan_id);
             ESP_LOGI(TAG, "Joined network successfully (Extended PAN ID: %02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x, PAN ID: 0x%04hx, Channel:%d)",
@@ -203,7 +225,7 @@ void esp_zb_app_signal_handler(esp_zb_app_signal_t *signal_struct)
             find_req.addr_of_interest = 0x0000;
             find_req.dst_nwk_addr = 0x0000;
             /* find the match on-off light device */
-            esp_zb_zdo_find_color_dimmable_light(&find_req, user_find_cb, NULL);
+            esp_zb_zdo_find_color_dimmable_light(&find_req, user_find_cb, NULL);    
         }
         break;
     case ESP_ZB_ZDO_SIGNAL_LEAVE:
@@ -318,6 +340,13 @@ void app_main(void)
     ESP_ERROR_CHECK(nvs_flash_init());
     ESP_ERROR_CHECK(esp_zb_platform_config(&config));
     switch_driver_init(button_func_pair, PAIR_SIZE(button_func_pair), esp_zb_buttons_handler);
+    //TODO Create new task for routing data from RFD devices.
+    // This task establishment a connection between RFDs and this FFD device
+    // This task should get data from RFD devices and send to coordinator
+    
+    // Task for measureing and sending data to coordinator
     xTaskCreate(update_attribute, "Update_attribute_value", 4096, NULL, 6, NULL);
+    
+    //Task for binding to coordinator
     xTaskCreate(esp_zb_task, "Zigbee_main", 4096, NULL, 5, NULL);
 }

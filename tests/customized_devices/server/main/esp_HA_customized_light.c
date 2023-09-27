@@ -69,7 +69,7 @@ void esp_zb_app_signal_handler(esp_zb_app_signal_t *signal_struct)
         break;
     case ESP_ZB_ZDO_SIGNAL_DEVICE_ANNCE:
         dev_annce_params = (esp_zb_zdo_signal_device_annce_params_t *)esp_zb_app_signal_get_params(p_sg_p);
-        ESP_LOGI(TAG, "New device commissioned or rejoined (short: 0x%04hx)", dev_annce_params->device_short_addr);
+        ESP_LOGI(TAG, "New Client commissioned or rejoined (short: 0x%04hx)", dev_annce_params->device_short_addr);
         break;
     case ESP_ZB_ZDO_SIGNAL_LEAVE_INDICATION:
         leave_ind_params = (esp_zb_zdo_signal_leave_indication_params_t *)esp_zb_app_signal_get_params(p_sg_p);
