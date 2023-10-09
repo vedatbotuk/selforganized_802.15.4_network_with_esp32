@@ -102,6 +102,7 @@ static esp_err_t zb_attribute_handler(const esp_zb_zcl_set_attr_value_message_t 
         if (message->attribute.id == ESP_ZB_ZCL_ATTR_LEVEL_CONTROL_CURRENT_LEVEL_ID && message->attribute.data.type == ESP_ZB_ZCL_ATTR_TYPE_U8) {
             light_state = message->attribute.data.value ? *(uint8_t *)message->attribute.data.value : light_state;
             
+            light_driver_set_color_RGB(20, 20, 20);
             light_driver_set_power(1);
             // Blink during get data from client
             ESP_LOGI(TAG, "Receive temperature Value: %d from endpoint(%d)", light_state, message->info.dst_endpoint);
@@ -134,6 +135,8 @@ static void esp_zb_task(void *pvParameters)
     /* initialize Zigbee stack with Zigbee coordinator config */
     esp_zb_cfg_t zb_nwk_cfg = ESP_ZB_ZC_CONFIG();
     esp_zb_init(&zb_nwk_cfg);
+    // tx_power(0) = -24dB
+    esp_zb_set_tx_power(0);
     uint8_t test_attr, test_attr2;
     test_attr = 0;
     test_attr2 = 3;

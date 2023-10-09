@@ -14,6 +14,7 @@
 
 #include "esp_zigbee_core.h"
 #include "switch_driver.h"
+#include "light_driver.h"
 
 /* Zigbee configuration */
 #define INSTALLCODE_POLICY_ENABLE       false    /* enable the install code policy for security */

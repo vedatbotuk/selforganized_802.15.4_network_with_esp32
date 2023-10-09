@@ -67,10 +67,14 @@ void update_attribute()
             cmd_req.transition_time = 0xffff;
             ESP_EARLY_LOGI(TAG_UPDATE_ATTR, "Send temeperature value: %d ", temperature);
             esp_zb_zcl_level_move_to_level_with_onoff_cmd_req(&cmd_req);   
+            light_driver_set_power(1);
+            vTaskDelay(20 / portTICK_PERIOD_MS);
+            light_driver_set_power(0);
+            
         } else {
             ESP_LOGI(TAG_UPDATE_ATTR, "Device is not connected!");
             }
-        vTaskDelay(10000 / portTICK_PERIOD_MS);
+        vTaskDelay(5000 / portTICK_PERIOD_MS);
     }
 }
 
@@ -155,7 +159,7 @@ static void ep_cb(esp_zb_zdp_status_t zdo_status, uint8_t ep_count, uint8_t *ep_
 static void simple_desc_cb(esp_zb_zdp_status_t zdo_status, esp_zb_af_simple_desc_1_1_t *simple_desc, void *user_ctx)
 {
     if (zdo_status == ESP_ZB_ZDP_STATUS_SUCCESS) {
-        ESP_LOGI(TAG, "Simple desc resposne: status(%d), device_id(%d), app_version(%d), profile_id(0x%x), endpoint_ID(%d)", zdo_status,
+        ESP_LOGI(TAG, "Simple desc response: status(%d), device_id(%d), app_version(%d), profile_id(0x%x), endpoint_ID(%d)", zdo_status,
                  simple_desc->app_device_id, simple_desc->app_device_version, simple_desc->app_profile_id, simple_desc->endpoint);
 
         for (int i = 0; i < (simple_desc->app_input_cluster_count + simple_desc->app_output_cluster_count); i++) {
@@ -300,6 +304,8 @@ static void esp_zb_task(void *pvParameters)
     /* initialize Zigbee stack */
     esp_zb_cfg_t zb_nwk_cfg = ESP_ZB_ZED_CONFIG();
     esp_zb_init(&zb_nwk_cfg);
+    // tx_power(0) = -24dB
+    esp_zb_set_tx_power(0);
     uint8_t test_attr;
     test_attr = 0;
     /* basic cluster create with fully customized */
@@ -340,6 +346,8 @@ void app_main(void)
     ESP_ERROR_CHECK(nvs_flash_init());
     ESP_ERROR_CHECK(esp_zb_platform_config(&config));
     switch_driver_init(button_func_pair, PAIR_SIZE(button_func_pair), esp_zb_buttons_handler);
+    light_driver_init(LIGHT_DEFAULT_OFF);
+    light_driver_set_color_RGB(0, 20, 0);
     //TODO Create new task for routing data from RFD devices.
     // This task establishment a connection between RFDs and this FFD device
     // This task should get data from RFD devices and send to coordinator
