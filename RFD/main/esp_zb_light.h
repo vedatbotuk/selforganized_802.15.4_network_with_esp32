@@ -3,7 +3,7 @@
  *
  * SPDX-License-Identifier: CC0-1.0
  *
- * Zigbee customized client Example
+ * Zigbee HA_on_off_light Example
  *
  * This example code is in the Public Domain (or CC0 licensed, at your option.)
  *
@@ -13,15 +13,14 @@
  */
 
 #include "esp_zigbee_core.h"
-#include "switch_driver.h"
+#include "light_driver.h"
 
 /* Zigbee configuration */
 #define INSTALLCODE_POLICY_ENABLE       false    /* enable the install code policy for security */
 #define ED_AGING_TIMEOUT                ESP_ZB_ED_AGING_TIMEOUT_64MIN
 #define ED_KEEP_ALIVE                   3000    /* 3000 millisecond */
-#define HA_ONOFF_SWITCH_ENDPOINT        1           /* esp switch device endpoint */
-#define ESP_ZB_PRIMARY_CHANNEL_MASK     (1l << 11)  /* Zigbee primary channel mask use in the example */
-#define ESP_ZB_SECONDARY_CHANNEL_MASK   (1l << 13)  /* Zigbee primary channel mask use in the example */
+#define HA_ESP_LIGHT_ENDPOINT           10    /* esp light bulb device endpoint, used to process light controlling commands */
+#define ESP_ZB_PRIMARY_CHANNEL_MASK     ESP_ZB_TRANSCEIVER_ALL_CHANNELS_MASK  /* Zigbee primary channel mask use in the example */
 
 #define ESP_ZB_ZED_CONFIG()                                         \
     {                                                               \
