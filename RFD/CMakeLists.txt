@@ -5,4 +5,4 @@ set(EXTRA_COMPONENT_DIRS
     ${CMAKE_CURRENT_SOURCE_DIR}/components/light_driver
     )
 include($ENV{IDF_PATH}/tools/cmake/project.cmake)
-project(on_off_light_bulb)
+project(temperature_rdf_device)

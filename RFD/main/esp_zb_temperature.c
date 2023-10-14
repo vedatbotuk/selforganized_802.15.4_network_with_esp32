@@ -3,7 +3,7 @@
  *
  * SPDX-License-Identifier: CC0-1.0
  *
- * Zigbee HA_on_off_light Example
+ * Zigbee HA_TEMPERATURE
  *
  * This example code is in the Public Domain (or CC0 licensed, at your option.)
  *
@@ -11,7 +11,7 @@
  * software is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR
  * CONDITIONS OF ANY KIND, either express or implied.
  */
-#include "esp_zb_light.h"
+#include "esp_zb_temperature.h"
 #include "esp_check.h"
 #include "esp_log.h"
 #include "nvs_flash.h"
@@ -24,14 +24,20 @@
 #error Define ZB_ED_ROLE in idf.py menuconfig to compile light (End Device) source code.
 #endif
 
-static const char *TAG = "ESP_ZB_ON_OFF_LIGHT";
+static char manufacturer[16], model[16];
+static const char *TAG = "ESP_ZB_TEMPERATURE";
 uint16_t temperature = 0;
+uint16_t temperature_max = 50;
+uint16_t temperature_min = -10;
 bool connected = false;
 /********************* Define functions **************************/
 void measure_temperature()
 {
     //TODO: Add max and min values, see /home/vedat/esp/temperature_sensor/temp_sensor_monitor/main
-    //TODO: Add ESP_ZB_ZCL_ATTR_TEMP_MEASUREMENT_VALUE_ID_MAX and MIN
+    //TODO: Next two line in while loop till connected
+    esp_zb_zcl_set_attribute_val(HA_ESP_TEMPERATURE_ENDPOINT, ESP_ZB_ZCL_CLUSTER_ID_TEMP_MEASUREMENT, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_TEMP_MEASUREMENT_MAX_VALUE_ID, &temperature_max, false); 
+    esp_zb_zcl_set_attribute_val(HA_ESP_TEMPERATURE_ENDPOINT, ESP_ZB_ZCL_CLUSTER_ID_TEMP_MEASUREMENT, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_TEMP_MEASUREMENT_MIN_VALUE_ID, &temperature_min, false); 
+    
     ESP_LOGI(TAG, "Install temperature sensor, expected temp ranger range: 10~50 ℃");
     temperature_sensor_handle_t temp_sensor = NULL;
     temperature_sensor_config_t temp_sensor_config = TEMPERATURE_SENSOR_CONFIG_DEFAULT(10, 50);
@@ -47,7 +53,7 @@ void measure_temperature()
         ESP_ERROR_CHECK(temperature_sensor_get_celsius(temp_sensor, &tsens_value));
         ESP_LOGI(TAG, "Temperature value %.02f ℃", tsens_value);
         temperature = (uint16_t) (tsens_value * 100);
-        esp_zb_zcl_status_t state_tmp = esp_zb_zcl_set_attribute_val(HA_ESP_LIGHT_ENDPOINT, ESP_ZB_ZCL_CLUSTER_ID_TEMP_MEASUREMENT, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_TEMP_MEASUREMENT_VALUE_ID, &temperature, false); 
+        esp_zb_zcl_status_t state_tmp = esp_zb_zcl_set_attribute_val(HA_ESP_TEMPERATURE_ENDPOINT, ESP_ZB_ZCL_CLUSTER_ID_TEMP_MEASUREMENT, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_TEMP_MEASUREMENT_VALUE_ID, &temperature, false); 
             /* Check for error */
             if(state_tmp != ESP_ZB_ZCL_STATUS_SUCCESS)
             {
@@ -107,53 +113,41 @@ void esp_zb_app_signal_handler(esp_zb_app_signal_t *signal_struct)
     }
 }
 
-static esp_err_t zb_attribute_handler(const esp_zb_zcl_set_attr_value_message_t *message)
-{
-    esp_err_t ret = ESP_OK;
-//    bool light_state = 0;
-
-    ESP_RETURN_ON_FALSE(message, ESP_FAIL, TAG, "Empty message");
-    ESP_RETURN_ON_FALSE(message->info.status == ESP_ZB_ZCL_STATUS_SUCCESS, ESP_ERR_INVALID_ARG, TAG, "Received message: error status(%d)",
-                        message->info.status);
-    ESP_LOGI(TAG, "Received message: endpoint(%d), cluster(0x%x), attribute(0x%x), data size(%d)", message->info.dst_endpoint, message->info.cluster,
-             message->attribute.id, message->attribute.data.size);
-//    if (message->info.dst_endpoint == HA_ESP_LIGHT_ENDPOINT) {
-//        if (message->info.cluster == ESP_ZB_ZCL_CLUSTER_ID_ON_OFF) {
-//            if (message->attribute.id == ESP_ZB_ZCL_ATTR_ON_OFF_ON_OFF_ID && message->attribute.data.type == ESP_ZB_ZCL_ATTR_TYPE_BOOL) {
-//                light_state = message->attribute.data.value ? *(bool *)message->attribute.data.value : light_state;
-//                ESP_LOGI(TAG, "Light sets to %s", light_state ? "On" : "Off");
-//                light_driver_set_power(light_state);
-//            }
-//        }
-//    }
-    return ret;
-}
-
-static esp_err_t zb_action_handler(esp_zb_core_action_callback_id_t callback_id, const void *message)
-{
-    esp_err_t ret = ESP_OK;
-    switch (callback_id) {
-    case ESP_ZB_CORE_SET_ATTR_VALUE_CB_ID:
-        ret = zb_attribute_handler((esp_zb_zcl_set_attr_value_message_t *)message);
-        break;
-    default:
-        ESP_LOGW(TAG, "Receive Zigbee action(0x%x) callback", callback_id);
-        break;
-    }
-    return ret;
-}
-
 static void esp_zb_task(void *pvParameters)
 {
     /* initialize Zigbee stack */
     esp_zb_cfg_t zb_nwk_cfg = ESP_ZB_ZED_CONFIG();
     esp_zb_init(&zb_nwk_cfg);
-    esp_zb_temperature_sensor_cfg_t temperature_cfg = ESP_ZB_DEFAULT_TEMPERATURE_SENSOR_CONFIG();
-    esp_zb_ep_list_t *esp_zb_temperature_ep = esp_zb_temperature_sensor_ep_create(HA_ESP_LIGHT_ENDPOINT, &temperature_cfg);
-    esp_zb_device_register(esp_zb_temperature_ep);
-    esp_zb_core_action_handler_register(zb_action_handler);
+    // tx_power(0) = -24dB
+    esp_zb_set_tx_power(0);
+    uint8_t test_attr;
+    test_attr = 0;
+    /* basic cluster create with fully customized */
+    esp_zb_attribute_list_t *esp_zb_basic_cluster = esp_zb_zcl_attr_list_create(ESP_ZB_ZCL_CLUSTER_ID_BASIC);
+    esp_zb_basic_cluster_add_attr(esp_zb_basic_cluster, ESP_ZB_ZCL_ATTR_BASIC_ZCL_VERSION_ID, &test_attr);
+    esp_zb_basic_cluster_add_attr(esp_zb_basic_cluster, ESP_ZB_ZCL_ATTR_BASIC_POWER_SOURCE_ID, &test_attr);
+    esp_zb_cluster_update_attr(esp_zb_basic_cluster, ESP_ZB_ZCL_ATTR_BASIC_ZCL_VERSION_ID, &test_attr);
+    /* identify cluster create with fully customized */
+    esp_zb_attribute_list_t *esp_zb_identify_cluster = esp_zb_zcl_attr_list_create(ESP_ZB_ZCL_CLUSTER_ID_IDENTIFY);
+    esp_zb_identify_cluster_add_attr(esp_zb_identify_cluster, ESP_ZB_ZCL_ATTR_IDENTIFY_IDENTIFY_TIME_ID, &test_attr);
+    /* create client role of the cluster */
+    esp_zb_attribute_list_t *esp_zb_on_off_client_cluster = esp_zb_zcl_attr_list_create(ESP_ZB_ZCL_CLUSTER_ID_TEMP_MEASUREMENT);
+    esp_zb_attribute_list_t *esp_zb_identify_client_cluster = esp_zb_zcl_attr_list_create(ESP_ZB_ZCL_CLUSTER_ID_IDENTIFY);
+    /* create cluster lists for this endpoint */
+    esp_zb_cluster_list_t *esp_zb_cluster_list = esp_zb_zcl_cluster_list_create();
+    esp_zb_cluster_list_add_basic_cluster(esp_zb_cluster_list, esp_zb_basic_cluster, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE);
+    esp_zb_cluster_list_add_identify_cluster(esp_zb_cluster_list, esp_zb_identify_cluster, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE);
+    esp_zb_cluster_list_add_temperature_meas_cluster(esp_zb_cluster_list, esp_zb_on_off_client_cluster, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE);
+//    esp_zb_cluster_list_add_identify_cluster(esp_zb_cluster_list, esp_zb_identify_client_cluster, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE);
+
+    esp_zb_ep_list_t *esp_zb_ep_list = esp_zb_ep_list_create();
+    esp_zb_ep_list_add_ep(esp_zb_ep_list, esp_zb_cluster_list, HA_ESP_TEMPERATURE_ENDPOINT, ESP_ZB_AF_HA_PROFILE_ID, ESP_ZB_HA_SIMPLE_SENSOR_DEVICE_ID);
+    esp_zb_device_register(esp_zb_ep_list);
+    //TODO This can be helpful for get routing-data on client.
+    //esp_zb_core_action_handler_register(zb_action_handler);
     esp_zb_set_primary_network_channel_set(ESP_ZB_PRIMARY_CHANNEL_MASK);
-    ESP_ERROR_CHECK(esp_zb_start(false));
+//    esp_zb_set_secondary_network_channel_set(ESP_ZB_SECONDARY_CHANNEL_MASK);
+    ESP_ERROR_CHECK(esp_zb_start(true));
     esp_zb_main_loop_iteration();
 }
 
@@ -166,6 +160,6 @@ void app_main(void)
     ESP_ERROR_CHECK(nvs_flash_init());
     ESP_ERROR_CHECK(esp_zb_platform_config(&config));
     light_driver_init(LIGHT_DEFAULT_OFF);
-    xTaskCreate(measure_temperature, "measure_temperature", 4096, NULL, 6, NULL);
+    //   xTaskCreate(measure_temperature, "measure_temperature", 4096, NULL, 6, NULL);
     xTaskCreate(esp_zb_task, "Zigbee_main", 4096, NULL, 5, NULL);
 }
