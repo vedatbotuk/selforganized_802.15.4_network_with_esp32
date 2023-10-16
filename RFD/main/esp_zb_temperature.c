@@ -29,7 +29,7 @@
 #define I2C_PIN_SCL 7
 
 static char manufacturer[16] = {5, 'B', 'o', 't', 'u', 'k'};
-static char model[16] = {11, 'E', 'S', 'P', '3', '2', 'C', '6', ' ', 'I', 'o', 'T'};
+static char model[16] = {15, 'E', 'S', 'P', '3', '2', 'C', '6', ' ', 'E', 'N', 'D', ' ', 'D', 'e', 'v'};
 static char firmware_version[16] = {6, 'v', 'e', 'r', '0', '.', '1'};
 static const char *TAG = "ESP_ZB_TEMPERATURE";
 uint16_t temperature = 0;
@@ -39,17 +39,7 @@ bool connected = false;
 /********************* Define functions **************************/
 void measure_temperature()
 {
-    ESP_LOGI(TAG, "Set min/max temperature");
-//    float tsens_value;
-    while (1) {
-        if (connected){
-            esp_zb_zcl_set_attribute_val(HA_ESP_TEMPERATURE_ENDPOINT, ESP_ZB_ZCL_CLUSTER_ID_TEMP_MEASUREMENT, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_TEMP_MEASUREMENT_MAX_VALUE_ID, &temperature_max, false); 
-            esp_zb_zcl_set_attribute_val(HA_ESP_TEMPERATURE_ENDPOINT, ESP_ZB_ZCL_CLUSTER_ID_TEMP_MEASUREMENT, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_TEMP_MEASUREMENT_MIN_VALUE_ID, &temperature_min, false);
-            break;
-            }
-        vTaskDelay(pdMS_TO_TICKS(5000));
-    }
-    
+    ESP_LOGI(TAG, "Set min/max temperature");  
     ESP_LOGI(TAG, "Read temperature");
     esp_err_t err;
     float temp_value;
