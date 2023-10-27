@@ -32,3 +32,4 @@ CONFIG_ZB_ENABLED=y
 CONFIG_ZB_ZED=y
 # end of Zboss
 # end of Component config
+
