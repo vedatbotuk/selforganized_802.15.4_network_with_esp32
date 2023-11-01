@@ -19,6 +19,8 @@
 
 static const char* TAG = "BMP180 I2C Driver";
 
+#define I2C_SCLK_SRC_FLAG_FOR_NOMAL       (0)         /*!< Any one clock source that is available for the specified frequency may be choosen*/
+
 #define ACK_CHECK_EN    0x1     // I2C master will check ack from slave
 #define ACK_CHECK_DIS   0x0     // I2C master will not check ack from slave
 #define ACK_VAL         0x0     // I2C ack value
@@ -294,6 +296,7 @@ esp_err_t bmp180_init(int pin_sda, int pin_scl)
     conf.scl_io_num = pin_scl;
     conf.scl_pullup_en = GPIO_PULLUP_ENABLE;
     conf.master.clk_speed = 100000 ;
+    conf.clk_flags = I2C_SCLK_SRC_FLAG_FOR_NOMAL;
 
     err = i2c_param_config(I2C_NUM_0, &conf);
     if (err != ESP_OK) {
