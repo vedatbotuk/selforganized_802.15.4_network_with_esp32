@@ -18,15 +18,14 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "ha/esp_zigbee_ha_standard.h"
-#include <bmp180.h>
+#include <dht11.h>
 #include "driver/gpio.h"
 
 #if !defined ZB_ED_ROLE
 #error Define ZB_ED_ROLE in idf.py menuconfig to compile light (End Device) source code.
 #endif
 
-#define I2C_PIN_SDA 6
-#define I2C_PIN_SCL 7
+#define DHT_GPIO GPIO_NUM_8
 
 static char manufacturer[16] = {5, 'B', 'o', 't', 'u', 'k'};
 static char model[16] = {15, 'E', 'S', 'P', '3', '2', 'C', '6', ' ', 'E', 'N', 'D', ' ', 'D', 'e', 'v'};
@@ -74,24 +73,19 @@ void zb_update_temp(int temperature)
 
 void measure_temperature()
 {
-    esp_err_t err;
     float temp_value;
     uint16_t temp_temperature = 0;
     
     /* Set min/max temperature values */
     while (1) {
         if (connected){
-            err = bmp180_read_temperature(&temp_value);
+            temp_value = DHT11_read().temperature;
             temperature = (uint16_t) (temp_value * 100);
-            if (err != ESP_OK) {
-                ESP_LOGE(TAG, "Reading of temperature from BMP180 failed at start, err = %d", err);       
-            } else {
-                ESP_LOGI(TAG, "Temperature write attribute first time, after start.");
-                esp_zb_zcl_set_attribute_val(HA_ESP_TEMPERATURE_ENDPOINT, ESP_ZB_ZCL_CLUSTER_ID_TEMP_MEASUREMENT, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_TEMP_MEASUREMENT_VALUE_ID, &temperature, false);
-                esp_zb_zcl_set_attribute_val(HA_ESP_TEMPERATURE_ENDPOINT, ESP_ZB_ZCL_CLUSTER_ID_TEMP_MEASUREMENT, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_TEMP_MEASUREMENT_MAX_VALUE_ID, &temperature_max, false); 
-                esp_zb_zcl_set_attribute_val(HA_ESP_TEMPERATURE_ENDPOINT, ESP_ZB_ZCL_CLUSTER_ID_TEMP_MEASUREMENT, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_TEMP_MEASUREMENT_MIN_VALUE_ID, &temperature_min, false);
-                break;
-            }
+            ESP_LOGI(TAG, "Temperature write attribute first time, after start.");
+            esp_zb_zcl_set_attribute_val(HA_ESP_TEMPERATURE_ENDPOINT, ESP_ZB_ZCL_CLUSTER_ID_TEMP_MEASUREMENT, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_TEMP_MEASUREMENT_VALUE_ID, &temperature, false);
+            esp_zb_zcl_set_attribute_val(HA_ESP_TEMPERATURE_ENDPOINT, ESP_ZB_ZCL_CLUSTER_ID_TEMP_MEASUREMENT, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_TEMP_MEASUREMENT_MAX_VALUE_ID, &temperature_max, false); 
+            esp_zb_zcl_set_attribute_val(HA_ESP_TEMPERATURE_ENDPOINT, ESP_ZB_ZCL_CLUSTER_ID_TEMP_MEASUREMENT, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_TEMP_MEASUREMENT_MIN_VALUE_ID, &temperature_min, false);
+            break;
         } else {
             ESP_LOGI(TAG, "Device is not connected!");
         }
@@ -101,19 +95,15 @@ void measure_temperature()
     /* Measure temperature loop*/
     while (1) {
         if (connected){
-            err = bmp180_read_temperature(&temp_value);
-            if (err != ESP_OK) {
-                ESP_LOGE(TAG, "Reading of temperature from BMP180 failed, err = %d", err);       
+            temp_value = DHT11_read().temperature;
+            ESP_LOGI(TAG, "Temperature : %.1f ℃", temp_value); 
+            temperature = (uint16_t) (temp_value * 100);
+            if (temperature == temp_temperature) {
+                ESP_LOGI(TAG, "Temperature changes, will report new value");
+                zb_update_temp(temperature);
+                temperature = temp_temperature;
             } else {
-                ESP_LOGI(TAG, "Temperature : %.1f ℃", temp_value); 
-                temperature = (uint16_t) (temp_value * 100);
-                if (temperature == temp_temperature) {
-                    ESP_LOGI(TAG, "Temperature changes, will report new value");
-                    zb_update_temp(temperature);
-                    temperature = temp_temperature;
-                } else {
-                    ESP_LOGI(TAG, "Temperature is the same, will not report.");
-                }
+                ESP_LOGI(TAG, "Temperature is the same, will not report.");
             }
         } else {
             ESP_LOGI(TAG, "Device is not connected!");
@@ -209,21 +199,14 @@ static void esp_zb_task(void *pvParameters)
 }
 
 void app_main(void)
-{
-    esp_err_t err;
-    
+{    
     esp_zb_platform_config_t config = {
         .radio_config = ESP_ZB_DEFAULT_RADIO_CONFIG(),
         .host_config = ESP_ZB_DEFAULT_HOST_CONFIG(),
     };
     ESP_ERROR_CHECK(nvs_flash_init());
     ESP_ERROR_CHECK(esp_zb_platform_config(&config));
-    err = bmp180_init(I2C_PIN_SDA, I2C_PIN_SCL);
-    if(err == ESP_OK){
-        xTaskCreate(measure_temperature, "measure_temperature", 4096, NULL, 5, NULL);
-        ESP_LOGI(TAG, "BMP180 init installed succesfully");
-    } else {
-        ESP_LOGE(TAG, "BMP180 init failed with error = %d", err);
-    }
+    DHT11_init(DHT_GPIO);
+    xTaskCreate(measure_temperature, "measure_temperature", 4096, NULL, 5, NULL);
     xTaskCreate(esp_zb_task, "Zigbee_main", 4096, NULL, 6, NULL);
 }
