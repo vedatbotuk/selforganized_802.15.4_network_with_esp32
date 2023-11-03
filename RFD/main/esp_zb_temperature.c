@@ -99,7 +99,7 @@ void measure_temperature()
             temp_value = DHT11_read().temperature;
             ESP_LOGI(TAG, "Temperature : %.1f ℃", temp_value); 
             temperature = (uint16_t) (temp_value * 100);
-            if (temperature == temp_temperature) {
+            if (temperature != temp_temperature) {
                 ESP_LOGI(TAG, "Temperature changes, will report new value");
                 zb_update_temp(temperature);
                 temperature = temp_temperature;
