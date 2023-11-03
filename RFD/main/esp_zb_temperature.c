@@ -108,7 +108,7 @@ void measure_temperature()
             if (dht_read_float_data(SENSOR_TYPE, CONFIG_EXAMPLE_DATA_GPIO, &humidity, &temperature) == ESP_OK){
                 ESP_LOGI(TAG, "Temperature : %.1f ℃", temperature); 
                 temperature_to_send = (uint16_t) (temperature * 100);
-                if (temperature_to_send == temp_temperature) {
+                if (temperature_to_send != temp_temperature) {
                     ESP_LOGI(TAG, "Temperature changes, will report new value");
                     zb_update_temp(temperature_to_send);
                     temperature_to_send = temp_temperature;
