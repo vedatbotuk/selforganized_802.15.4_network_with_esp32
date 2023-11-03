@@ -25,7 +25,8 @@
 #error Define ZB_ED_ROLE in idf.py menuconfig to compile light (End Device) source code.
 #endif
 
-#define DHT_GPIO GPIO_NUM_8
+// GPIO_NUM_8 works, but this port is the built-in LED
+#define DHT_GPIO GPIO_NUM_1
 
 static char manufacturer[16] = {5, 'B', 'o', 't', 'u', 'k'};
 static char model[16] = {15, 'E', 'S', 'P', '3', '2', 'C', '6', ' ', 'E', 'N', 'D', ' ', 'D', 'e', 'v'};
