@@ -18,22 +18,21 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "ha/esp_zigbee_ha_standard.h"
-#include <dht11.h>
+#include <dht22.h>
 #include "driver/gpio.h"
 
 #if !defined ZB_ED_ROLE
 #error Define ZB_ED_ROLE in idf.py menuconfig to compile light (End Device) source code.
 #endif
 
-#define DHT_GPIO GPIO_NUM_8
+#define CONFIG_EXAMPLE_DATA_GPIO GPIO_NUM_2
+
+#define SENSOR_TYPE DHT_TYPE_AM2301
 
 static char manufacturer[16] = {5, 'B', 'o', 't', 'u', 'k'};
 static char model[16] = {15, 'E', 'S', 'P', '3', '2', 'C', '6', ' ', 'E', 'N', 'D', ' ', 'D', 'e', 'v'};
 static char firmware_version[16] = {6, 'v', 'e', 'r', '0', '.', '1'};
 static const char *TAG = "ESP_ZB_TEMPERATURE";
-uint16_t temperature = 0;
-uint16_t temperature_max = 50000;
-uint16_t temperature_min = -1000;
 bool connected = false;
 
 /********************* Define functions **************************/
@@ -73,37 +72,51 @@ void zb_update_temp(int temperature)
 
 void measure_temperature()
 {
-    float temp_value;
+    uint16_t temperature_to_send = 0;
+    uint16_t temperature_max = 50000;
+    uint16_t temperature_min = -1000;
+    float temperature, humidity;
     uint16_t temp_temperature = 0;
     
     /* Set min/max temperature values */
     while (1) {
         if (connected){
-            temp_value = DHT11_read().temperature;
-            temperature = (uint16_t) (temp_value * 100);
-            ESP_LOGI(TAG, "Temperature write attribute first time, after start.");
-            esp_zb_zcl_set_attribute_val(HA_ESP_TEMPERATURE_ENDPOINT, ESP_ZB_ZCL_CLUSTER_ID_TEMP_MEASUREMENT, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_TEMP_MEASUREMENT_VALUE_ID, &temperature, false);
-            esp_zb_zcl_set_attribute_val(HA_ESP_TEMPERATURE_ENDPOINT, ESP_ZB_ZCL_CLUSTER_ID_TEMP_MEASUREMENT, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_TEMP_MEASUREMENT_MAX_VALUE_ID, &temperature_max, false); 
-            esp_zb_zcl_set_attribute_val(HA_ESP_TEMPERATURE_ENDPOINT, ESP_ZB_ZCL_CLUSTER_ID_TEMP_MEASUREMENT, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_TEMP_MEASUREMENT_MIN_VALUE_ID, &temperature_min, false);
-            break;
+            if (dht_read_float_data(SENSOR_TYPE, CONFIG_EXAMPLE_DATA_GPIO, &humidity, &temperature) == ESP_OK){
+                ESP_LOGI(TAG, "Temperature : %.1f ℃", temperature); 
+                temperature_to_send = (uint16_t) (temperature * 100);
+                ESP_LOGI(TAG, "Temperature write attribute first time, after start.");
+                esp_zb_zcl_set_attribute_val(HA_ESP_TEMPERATURE_ENDPOINT, ESP_ZB_ZCL_CLUSTER_ID_TEMP_MEASUREMENT, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_TEMP_MEASUREMENT_VALUE_ID, &temperature_to_send, false);
+                esp_zb_zcl_set_attribute_val(HA_ESP_TEMPERATURE_ENDPOINT, ESP_ZB_ZCL_CLUSTER_ID_TEMP_MEASUREMENT, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_TEMP_MEASUREMENT_MAX_VALUE_ID, &temperature_max, false); 
+                esp_zb_zcl_set_attribute_val(HA_ESP_TEMPERATURE_ENDPOINT, ESP_ZB_ZCL_CLUSTER_ID_TEMP_MEASUREMENT, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_TEMP_MEASUREMENT_MIN_VALUE_ID, &temperature_min, false);
+                break;
+            } else {
+                ESP_LOGW(TAG, "Could not read data from sensor.");
+            }
+
         } else {
             ESP_LOGI(TAG, "Device is not connected!");
         }
         vTaskDelay(pdMS_TO_TICKS(5000));
     }
     
+    /* Wait for next mesurement */
+    vTaskDelay(pdMS_TO_TICKS(5000));
+    
     /* Measure temperature loop*/
     while (1) {
         if (connected){
-            temp_value = DHT11_read().temperature;
-            ESP_LOGI(TAG, "Temperature : %.1f ℃", temp_value); 
-            temperature = (uint16_t) (temp_value * 100);
-            if (temperature == temp_temperature) {
-                ESP_LOGI(TAG, "Temperature changes, will report new value");
-                zb_update_temp(temperature);
-                temperature = temp_temperature;
+            if (dht_read_float_data(SENSOR_TYPE, CONFIG_EXAMPLE_DATA_GPIO, &humidity, &temperature) == ESP_OK){
+                ESP_LOGI(TAG, "Temperature : %.1f ℃", temperature); 
+                temperature_to_send = (uint16_t) (temperature * 100);
+                if (temperature_to_send == temp_temperature) {
+                    ESP_LOGI(TAG, "Temperature changes, will report new value");
+                    zb_update_temp(temperature_to_send);
+                    temperature_to_send = temp_temperature;
+                } else {
+                    ESP_LOGI(TAG, "Temperature is the same, will not report.");
+                }
             } else {
-                ESP_LOGI(TAG, "Temperature is the same, will not report.");
+                ESP_LOGW(TAG, "Could not read data from sensor.");
             }
         } else {
             ESP_LOGI(TAG, "Device is not connected!");
@@ -206,7 +219,6 @@ void app_main(void)
     };
     ESP_ERROR_CHECK(nvs_flash_init());
     ESP_ERROR_CHECK(esp_zb_platform_config(&config));
-    DHT11_init(DHT_GPIO);
-    xTaskCreate(measure_temperature, "measure_temperature", 4096, NULL, 5, NULL);
+    xTaskCreate(measure_temperature, "measure_temperature", configMINIMAL_STACK_SIZE * 3, NULL, 5, NULL);
     xTaskCreate(esp_zb_task, "Zigbee_main", 4096, NULL, 6, NULL);
 }
