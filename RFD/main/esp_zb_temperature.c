@@ -20,13 +20,13 @@
 #include "ha/esp_zigbee_ha_standard.h"
 #include <dht22.h>
 #include "driver/gpio.h"
+#include "oneshot_read_main.c"
 
 #if !defined ZB_ED_ROLE
 #error Define ZB_ED_ROLE in idf.py menuconfig to compile light (End Device) source code.
 #endif
 
 #define CONFIG_EXAMPLE_DATA_GPIO GPIO_NUM_2
-
 #define SENSOR_TYPE DHT_TYPE_AM2301
 
 static char manufacturer[16] = {5, 'B', 'o', 't', 'u', 'k'};
@@ -111,6 +111,7 @@ void measure_temperature()
                 if (temperature_to_send != temp_temperature) {
                     ESP_LOGI(TAG, "Temperature changes, will report new value");
                     zb_update_temp(temperature_to_send);
+                    ESP_LOGI(TAG, "Battery level: %d", get_battery_level());
                     temperature_to_send = temp_temperature;
                 } else {
                     ESP_LOGI(TAG, "Temperature is the same, will not report.");
