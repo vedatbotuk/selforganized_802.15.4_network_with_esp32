@@ -77,6 +77,7 @@ void measure_temperature()
     uint16_t temperature_min = -1000;
     float temperature, humidity;
     uint16_t temp_temperature = 0;
+    int battery_level;
     
     /* Set min/max temperature values */
     while (1) {
@@ -111,7 +112,8 @@ void measure_temperature()
                 if (temperature_to_send != temp_temperature) {
                     ESP_LOGI(TAG, "Temperature changes, will report new value");
                     zb_update_temp(temperature_to_send);
-                    ESP_LOGI(TAG, "Battery level: %d", get_battery_level());
+                    battery_level = get_battery_level();
+                    ESP_LOGI(TAG, "Battery level: %d %%", battery_level);
                     temperature_to_send = temp_temperature;
                 } else {
                     ESP_LOGI(TAG, "Temperature is the same, will not report.");
@@ -122,7 +124,7 @@ void measure_temperature()
         } else {
             ESP_LOGI(TAG, "Device is not connected!");
         }
-        vTaskDelay(pdMS_TO_TICKS(30000));
+        vTaskDelay(pdMS_TO_TICKS(5000));
     }
 }
 
@@ -218,6 +220,9 @@ void app_main(void)
         .radio_config = ESP_ZB_DEFAULT_RADIO_CONFIG(),
         .host_config = ESP_ZB_DEFAULT_HOST_CONFIG(),
     };
+    
+    voltage_calculate_init();
+    
     ESP_ERROR_CHECK(nvs_flash_init());
     ESP_ERROR_CHECK(esp_zb_platform_config(&config));
     xTaskCreate(measure_temperature, "measure_temperature", configMINIMAL_STACK_SIZE * 3, NULL, 5, NULL);
