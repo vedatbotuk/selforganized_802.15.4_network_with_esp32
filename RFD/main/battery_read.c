@@ -16,7 +16,7 @@
 
 const static char *TAG_VOL = "VOLTAGE";
 
-#define VOLTAGE_MAX 10000
+#define VOLTAGE_MAX 8200
 #define VOLTAGE_MIN 7000
 
 /*---------------------------------------------------------------

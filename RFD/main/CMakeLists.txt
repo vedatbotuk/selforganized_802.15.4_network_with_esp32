@@ -4,6 +4,6 @@ idf_component_register(
     "dht22.c"
     "esp_idf_lib_helpers.h"
     "ets_sys.h"
-    "oneshot_read_main.c"
+    "battery_read.c"
     INCLUDE_DIRS "."
 )

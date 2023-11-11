@@ -45,7 +45,8 @@
         || defined(CONFIG_IDF_TARGET_ESP32S3) \
         || defined(CONFIG_IDF_TARGET_ESP32C2) \
         || defined(CONFIG_IDF_TARGET_ESP32C3) \
-        || defined(CONFIG_IDF_TARGET_ESP32C6)
+        || defined(CONFIG_IDF_TARGET_ESP32C6) \
+        || defined(CONFIG_IDF_TARGET_ESP32H2)
 #define HELPER_TARGET_IS_ESP32     (1)
 #define HELPER_TARGET_IS_ESP8266   (0)
 

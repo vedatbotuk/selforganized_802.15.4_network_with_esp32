@@ -20,7 +20,7 @@
 #include "ha/esp_zigbee_ha_standard.h"
 #include <dht22.h>
 #include "driver/gpio.h"
-#include "oneshot_read_main.c"
+#include "battery_read.c"
 
 #if !defined ZB_ED_ROLE
 #error Define ZB_ED_ROLE in idf.py menuconfig to compile light (End Device) source code.
@@ -30,7 +30,7 @@
 #define SENSOR_TYPE DHT_TYPE_AM2301
 
 static char manufacturer[16] = {5, 'B', 'o', 't', 'u', 'k'};
-static char model[16] = {15, 'E', 'S', 'P', '3', '2', 'C', '6', ' ', 'E', 'N', 'D', ' ', 'D', 'e', 'v'};
+static char model[16] = {15, 'E', 'S', 'P', '3', '2', 'H', '2', ' ', 'E', 'N', 'D', ' ', 'D', 'e', 'v'};
 static char firmware_version[16] = {6, 'v', 'e', 'r', '0', '.', '1'};
 static const char *TAG = "ESP_ZB_TEMPERATURE";
 bool connected = false;
