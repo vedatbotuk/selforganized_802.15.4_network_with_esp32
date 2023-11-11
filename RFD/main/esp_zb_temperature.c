@@ -114,7 +114,7 @@ void measure_temperature()
                     zb_update_temp(temperature_to_send);
                     battery_level = get_battery_level();
                     ESP_LOGI(TAG, "Battery level: %d %%", battery_level);
-                    temperature_to_send = temp_temperature;
+                    temp_temperature = temperature_to_send;
                 } else {
                     ESP_LOGI(TAG, "Temperature is the same, will not report.");
                 }
