@@ -29,7 +29,7 @@
 #define I2C_PIN_SCL 7
 
 static char manufacturer[16] = {5, 'B', 'o', 't', 'u', 'k'};
-static char model[16] = {15, 'E', 'S', 'P', '3', '2', 'C', '6', ' ', 'E', 'N', 'D', ' ', 'D', 'e', 'v'};
+static char model[16] = {15, 'E', 'S', 'P', '3', '2', 'H', '2', ' ', 'E', 'N', 'D', ' ', 'D', 'e', 'v'};
 static char firmware_version[16] = {6, 'v', 'e', 'r', '0', '.', '1'};
 static const char *TAG = "ESP_ZB_TEMPERATURE";
 uint16_t temperature = 0;
@@ -61,13 +61,13 @@ void zb_update_temp(int temperature)
     }
 
     /* Request sending new phase voltage */
-    esp_err_t state1 = esp_zb_zcl_report_attr_cmd_req(&temp_measurement_cmd_req);
+//    esp_err_t state1 = esp_zb_zcl_report_attr_cmd_req(&temp_measurement_cmd_req);
 
     /* Check for error */
-    if(state1 != ESP_OK) {
-        ESP_LOGE(TAG, "Sending temp attribute report command failed!");
-        return;
-    }
+//    if(state1 != ESP_OK) {
+//        ESP_LOGE(TAG, "Sending temp attribute report command failed!");
+//        return;
+//    }
     ESP_LOGI(TAG, "Setting temp success");
     return;
 }
@@ -87,7 +87,7 @@ void measure_temperature()
                 ESP_LOGE(TAG, "Reading of temperature from BMP180 failed at start, err = %d", err);       
             } else {
                 ESP_LOGI(TAG, "Temperature write attribute first time, after start.");
-                esp_zb_zcl_set_attribute_val(HA_ESP_TEMPERATURE_ENDPOINT, ESP_ZB_ZCL_CLUSTER_ID_TEMP_MEASUREMENT, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_TEMP_MEASUREMENT_VALUE_ID, &temperature, false);
+//                esp_zb_zcl_set_attribute_val(HA_ESP_TEMPERATURE_ENDPOINT, ESP_ZB_ZCL_CLUSTER_ID_TEMP_MEASUREMENT, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_TEMP_MEASUREMENT_VALUE_ID, &temperature, false);
                 esp_zb_zcl_set_attribute_val(HA_ESP_TEMPERATURE_ENDPOINT, ESP_ZB_ZCL_CLUSTER_ID_TEMP_MEASUREMENT, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_TEMP_MEASUREMENT_MAX_VALUE_ID, &temperature_max, false); 
                 esp_zb_zcl_set_attribute_val(HA_ESP_TEMPERATURE_ENDPOINT, ESP_ZB_ZCL_CLUSTER_ID_TEMP_MEASUREMENT, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_TEMP_MEASUREMENT_MIN_VALUE_ID, &temperature_min, false);
                 break;
@@ -107,10 +107,10 @@ void measure_temperature()
             } else {
                 ESP_LOGI(TAG, "Temperature : %.1f ℃", temp_value); 
                 temperature = (uint16_t) (temp_value * 100);
-                if (temperature == temp_temperature) {
+                if (temperature != temp_temperature) {
                     ESP_LOGI(TAG, "Temperature changes, will report new value");
                     zb_update_temp(temperature);
-                    temperature = temp_temperature;
+                    temp_temperature = temperature;
                 } else {
                     ESP_LOGI(TAG, "Temperature is the same, will not report.");
                 }
@@ -168,7 +168,7 @@ static void esp_zb_task(void *pvParameters)
     esp_zb_cfg_t zb_nwk_cfg = ESP_ZB_ZED_CONFIG();
     esp_zb_init(&zb_nwk_cfg);
     /* Set trasmitter power tx_power(0) = -24dB */
-//    esp_zb_set_tx_power(10);
+    esp_zb_set_tx_power(0);
 
     uint8_t test_attr;
     test_attr = 0;
