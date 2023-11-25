@@ -104,20 +104,53 @@ void zb_update_hum(int humidity)
     return;
 }
 
+void zb_update_battery_level(int level)
+{
+    static esp_zb_zcl_report_attr_cmd_t battery_level_measurement_cmd_req = {};
+        battery_level_measurement_cmd_req.zcl_basic_cmd.src_endpoint = HA_ESP_TEMPERATURE_ENDPOINT;
+        battery_level_measurement_cmd_req.address_mode = ESP_ZB_APS_ADDR_MODE_DST_ADDR_ENDP_NOT_PRESENT;
+        battery_level_measurement_cmd_req.clusterID = ESP_ZB_ZCL_CLUSTER_ID_POWER_CONFIG;
+        battery_level_measurement_cmd_req.cluster_role = ESP_ZB_ZCL_CLUSTER_SERVER_ROLE;
+
+    /* Write new temp */
+//    esp_zb_zcl_status_t state = esp_zb_zcl_set_attribute_val(HA_ESP_TEMPERATURE_ENDPOINT, ESP_ZB_ZCL_CLUSTER_ID_POWER_CONFIG, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_POWER_CONFIG_BATTERY_PERCENTAGE_REMAINING_ID, &level, false);
+
+    /* Check for error */
+//    if(state != ESP_ZB_ZCL_STATUS_SUCCESS) {
+//        ESP_LOGE(TAG, "Setting battery level attribute failed!");
+//        return;
+//    }
+
+    /* Request sending new phase voltage */
+    esp_err_t state1 = esp_zb_zcl_report_attr_cmd_req(&battery_level_measurement_cmd_req);
+
+    /* Check for error */
+    if(state1 != ESP_OK) {
+        ESP_LOGE(TAG, "Sending battery level attribute report command failed!");
+        return;
+    }
+    ESP_LOGI(TAG, "Setting battery level success");
+    return;
+}
+
 void measure_temperature()
 {
+    float temperature;
     uint16_t temperature_to_send = 0;
     uint16_t temperature_max = 50000;
     uint16_t temperature_min = -1000;
     uint16_t temp_temperature = 0;
     
+    float humidity;
     uint16_t humidity_to_send = 0;
-    uint16_t humidity_max = 100000;
+    //TODO why humidity_max uint32_t
+    uint32_t humidity_max = 100000;
     uint16_t humidity_min = 0;
     uint16_t temp_humidity= 0;
     
-    float temperature, humidity;  
     int battery_level;
+    int battery_level_to_send = 0;
+    int temp_battery_level = 0;
     
     /* Set min/max temperature values */
     while (1) {
@@ -156,22 +189,22 @@ void measure_temperature()
             if (dht_read_float_data(SENSOR_TYPE, CONFIG_EXAMPLE_DATA_GPIO, &humidity, &temperature) == ESP_OK){
                 ESP_LOGI(TAG, "Temperature : %.1f ℃", temperature); 
                 ESP_LOGI(TAG, "Humidity : %.1f %%", humidity);
+                battery_level = get_battery_level();
+                ESP_LOGI(TAG, "Battery level: %d %%", battery_level);
                 temperature_to_send = (uint16_t) (temperature * 100);
                 humidity_to_send = (uint16_t) (humidity * 100);
+                battery_level_to_send = (int) (2 * battery_level);
                 if (temperature_to_send != temp_temperature) {
                     ESP_LOGI(TAG, "Temperature changes, will report new value");
                     zb_update_temp(temperature_to_send);
-
                     temp_temperature = temperature_to_send;
-                }  else if (humidity_to_send != temp_humidity) {
+                } else if (humidity_to_send != temp_humidity) {
                     ESP_LOGI(TAG, "Humidity changes, will report new value");
                     zb_update_hum(humidity_to_send);
                     temp_humidity = humidity_to_send;
-                } else if (humidity_to_send != temp_humidity) {
+                } else if (battery_level_to_send != temp_battery_level) {
                     ESP_LOGI(TAG, "Battery level changes, will report new value");
-                    battery_level = get_battery_level();
-                    ESP_LOGI(TAG, "Battery level: %d %%", battery_level);
-                    // TODO: Report battery level
+                    zb_update_temp(battery_level_to_send);
                 } else {
                     ESP_LOGI(TAG, "Temperature, humidity and battery level are the same, will not report.");
                 }
@@ -261,6 +294,18 @@ static void esp_zb_task(void *pvParameters)
     esp_zb_humidity_meas_cluster_add_attr(esp_zb_hum_meas_cluster, ESP_ZB_ZCL_ATTR_REL_HUMIDITY_MEASUREMENT_VALUE_ID, &undefined_value);
     esp_zb_humidity_meas_cluster_add_attr(esp_zb_hum_meas_cluster, ESP_ZB_ZCL_ATTR_REL_HUMIDITY_MEASUREMENT_MIN_VALUE_ID, &undefined_value);
     esp_zb_humidity_meas_cluster_add_attr(esp_zb_hum_meas_cluster, ESP_ZB_ZCL_ATTR_REL_HUMIDITY_MEASUREMENT_MAX_VALUE_ID, &undefined_value);
+    
+    /* POWER_CONFIG cluster */
+    esp_zb_attribute_list_t *esp_zb_pwrcfg_meas_cluster = esp_zb_zcl_attr_list_create(ESP_ZB_ZCL_CLUSTER_ID_POWER_CONFIG);
+    
+//esp_zb_power_config_cluster_add_attr(esp_zb_pwrcfg_meas_cluster, ESP_ZB_ZCL_ATTR_POWER_CONFIG_MAINS_VOLTAGE_ID, &undefined_value);
+//esp_zb_power_config_cluster_add_attr(esp_zb_pwrcfg_meas_cluster, ESP_ZB_ZCL_ATTR_POWER_CONFIG_MAINS_FREQUENCY_ID, &undefined_value);
+//esp_zb_power_config_cluster_add_attr(esp_zb_pwrcfg_meas_cluster, ESP_ZB_ZCL_ATTR_POWER_CONFIG_MAINS_ALARM_MASK_ID, &undefined_value);
+//esp_zb_power_config_cluster_add_attr(esp_zb_pwrcfg_meas_cluster, ESP_ZB_ZCL_ATTR_POWER_CONFIG_MAINS_VOLTAGE_MIN_THRESHOLD, &undefined_value);
+//esp_zb_power_config_cluster_add_attr(esp_zb_pwrcfg_meas_cluster, ESP_ZB_ZCL_ATTR_POWER_CONFIG_MAINS_VOLTAGE_MAX_THRESHOLD, &undefined_value);
+//esp_zb_power_config_cluster_add_attr(esp_zb_pwrcfg_meas_cluster, ESP_ZB_ZCL_ATTR_POWER_CONFIG_MAINS_DWELL_TRIP_POINT, &undefined_value);
+                        
+//    esp_zb_power_config_cluster_add_attr(esp_zb_pwrcfg_meas_cluster, ESP_ZB_ZCL_ATTR_POWER_CONFIG_BATTERY_PERCENTAGE_REMAINING_ID, &undefined_value);
 
     /* create cluster lists for this endpoint */
     esp_zb_cluster_list_t *esp_zb_cluster_list = esp_zb_zcl_cluster_list_create();
@@ -268,6 +313,7 @@ static void esp_zb_task(void *pvParameters)
     esp_zb_cluster_list_add_identify_cluster(esp_zb_cluster_list, esp_zb_identify_cluster, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE);
     esp_zb_cluster_list_add_temperature_meas_cluster(esp_zb_cluster_list, esp_zb_temperature_meas_cluster, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE);
     esp_zb_cluster_list_add_humidity_meas_cluster(esp_zb_cluster_list, esp_zb_hum_meas_cluster, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE);
+    esp_zb_cluster_list_add_power_config_cluster(esp_zb_cluster_list, esp_zb_pwrcfg_meas_cluster, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE);
 
     esp_zb_ep_list_t *esp_zb_ep_list = esp_zb_ep_list_create();
     esp_zb_ep_list_add_ep(esp_zb_ep_list, esp_zb_cluster_list, HA_ESP_TEMPERATURE_ENDPOINT, ESP_ZB_AF_HA_PROFILE_ID, ESP_ZB_HA_TEMPERATURE_SENSOR_DEVICE_ID);

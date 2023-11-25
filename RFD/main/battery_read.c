@@ -23,9 +23,13 @@ const static char *TAG_VOL = "VOLTAGE";
         ADC General Macros
 ---------------------------------------------------------------*/
 //ADC1 Channels
+#if CONFIG_IDF_TARGET_ESP32C6
+#define EXAMPLE_ADC1_CHAN1          ADC_CHANNEL_3
+#elif CONFIG_IDF_TARGET_ESP32H2
 #define EXAMPLE_ADC1_CHAN1          ADC_CHANNEL_0
-#define EXAMPLE_ADC_ATTEN           ADC_ATTEN_DB_11
+#endif
 
+#define EXAMPLE_ADC_ATTEN           ADC_ATTEN_DB_11
 
 adc_oneshot_unit_handle_t adc1_handle;
 adc_cali_handle_t adc1_cali_chan1_handle = NULL;
