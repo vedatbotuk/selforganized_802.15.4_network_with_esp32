@@ -26,7 +26,12 @@
 #error Define ZB_ED_ROLE in idf.py menuconfig to compile light (End Device) source code.
 #endif
 
+#if CONFIG_IDF_TARGET_ESP32C6
 #define CONFIG_EXAMPLE_DATA_GPIO GPIO_NUM_2
+#elif CONFIG_IDF_TARGET_ESP32H2
+#define CONFIG_EXAMPLE_DATA_GPIO GPIO_NUM_0
+#endif
+
 #define SENSOR_TYPE DHT_TYPE_AM2301
 
 static char manufacturer[16] = {5, 'B', 'o', 't', 'u', 'k'};
