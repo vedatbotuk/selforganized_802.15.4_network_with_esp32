@@ -23,7 +23,7 @@ const static char *TAG_VOL = "VOLTAGE";
         ADC General Macros
 ---------------------------------------------------------------*/
 //ADC1 Channels
-#define EXAMPLE_ADC1_CHAN1          ADC_CHANNEL_3
+#define EXAMPLE_ADC1_CHAN1          ADC_CHANNEL_0
 #define EXAMPLE_ADC_ATTEN           ADC_ATTEN_DB_11
 
 
