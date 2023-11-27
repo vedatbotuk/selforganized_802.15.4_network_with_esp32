@@ -45,7 +45,7 @@ void voltage_calculate_init();
 
 int calc_battery_percentage(int adc)
 {
-      int battery_voltage = (float) adc * 49254 / 47000 / 3300 * VOLTAGE_MAX;
+      int battery_voltage = (float) adc * 519076 / 470000 / 820000 * VOLTAGE_MAX;
 //      ESP_LOGI(TAG_VOL, "Battery voltage: %d mV", battery_voltage);
       battery_percentage = 100 * (battery_voltage - VOLTAGE_MIN) / (VOLTAGE_MAX - VOLTAGE_MIN);
 //      ESP_LOGI(TAG_VOL, "Battery percentage: %d", battery_percentage);
