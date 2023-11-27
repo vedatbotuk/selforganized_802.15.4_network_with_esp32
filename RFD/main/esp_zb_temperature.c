@@ -158,18 +158,22 @@ void measure_temperature()
     while (1) {
         if (connected){
             if (dht_read_float_data(SENSOR_TYPE, CONFIG_EXAMPLE_DATA_GPIO, &humidity, &temperature) == ESP_OK){
-                ESP_LOGI(TAG, "Temperature : %.1f ℃", temperature); 
+
+                ESP_LOGI(TAG, "Temperature : %.1f ℃", temperature);
                 ESP_LOGI(TAG, "Humidity : %.1f %%", humidity);
                 battery_level = get_battery_level();
                 ESP_LOGI(TAG, "Battery level: %d %%", battery_level);
+                temperature_to_send = (uint16_t) (temperature * 100);
+                humidity_to_send = (uint16_t) (humidity * 100);
+                battery_level_to_send = (int) (2 * battery_level);
                 
-                ESP_LOGI(TAG, "Temperature changes, will report new value");
+                ESP_LOGI(TAG, "Temperature changes, will write new value");
                 zb_update_temp(temperature_to_send);
 
-                ESP_LOGI(TAG, "Humidity changes, will report new value");
+                ESP_LOGI(TAG, "Humidity changes, will write new value");
                 zb_update_hum(humidity_to_send);
 
-                ESP_LOGI(TAG, "Battery level changes, will report new value");
+                ESP_LOGI(TAG, "Battery level changes, will write new value");
                 zb_update_battery_level(battery_level_to_send);
 
             } else {
