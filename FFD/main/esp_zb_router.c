@@ -115,17 +115,6 @@ static esp_err_t zb_ota_upgrade_status_handler(esp_zb_zcl_ota_upgrade_value_mess
     const uint8_t *payload = (const uint8_t *)messsage.payload;
     size_t payload_size = messsage.payload_size;
     
-//    size_t num_elements = 6;
-    
-//    ota_header_size_ = num_elements * sizeof(uint8_t);
-//    ota_header_ = (uint8_t*)malloc(ota_header_size_);
-
-    
-    if (ota_header_ == NULL) {
-        // Handle allocation failure
-        ESP_LOGI(TAG, "Memory allocation failed");
-    }
-    
     esp_err_t ret = ESP_OK;
     if (messsage.info.status == ESP_ZB_ZCL_STATUS_SUCCESS) {
         switch (messsage.upgrade_status) {
@@ -144,25 +133,14 @@ static esp_err_t zb_ota_upgrade_status_handler(esp_zb_zcl_ota_upgrade_value_mess
             total_size = messsage.ota_header.image_size;
             offset += messsage.payload_size;
             
-//            ESP_LOGI(TAG, "OTA  %d]", messsage.ota_header.payload_size);
             ESP_LOGI(TAG, "OTA [%ld/%ld]", offset, total_size);
-            
-//            ESP_LOGI(TAG, "OTA Client receives data: progress [%ld/%ld]", offset, total_size);
-//            ESP_LOGI(TAG, "START- payload_size  Nr: %zu", payload_size);
 
-//            ESP_LOGI(TAG, "ota_hea_size %zu", ota_header_size_);
-//            ESP_LOGI(TAG, "payload_size %zu", payload_size);
-
-//            for (int i = 0; i < 6; ++i) {
             while (ota_header_size_ < 6 && payload_size > 0) {
                 ota_header_ = realloc(ota_header_, (ota_header_size_ + 1) * sizeof(uint8_t));
 				ota_header_[ota_header_size_] = payload[0];
 				payload++;
 				payload_size--;
 				ota_header_size_++;
-//				ESP_LOGI(TAG, "while paysize %zu", payload_size);
-//				ESP_LOGI(TAG, "while payload 0x%02x", payload[0]);
-//				ESP_LOGI(TAG, "while ota_hed 0x%02x", ota_header_[0]);
 			}
 
             if (!ota_upgrade_subelement_ && ota_header_size_ == 6) {
@@ -177,22 +155,11 @@ static esp_err_t zb_ota_upgrade_status_handler(esp_zb_zcl_ota_upgrade_value_mess
 
                 }
             }  
-
-//            ESP_LOGI(TAG, "OTA sub-element size %zu", ota_data_len_);
-//            ESP_LOGI(TAG, "Byte Nr:             %zu", payload_size);
-//            ESP_LOGI(TAG, "Bytes: 0x%02x 0x%02x 0x%02x 0x%02x 0x%02x 0x%02x", payload[0], payload[1], payload[2], payload[3], payload[4], payload[5]);
-
-            
+           
             if (ota_data_len_) {
-//                ESP_LOGI(TAG, "ELSE- payload_size  Nr: %zu", payload_size);
-//                ESP_LOGI(TAG, "ELSE- ota_data_len_ Nr: %zu", ota_data_len_);
                 payload_size = min_size_t(ota_data_len_, payload_size);
                 ota_data_len_ = ota_data_len_ - payload_size;
 
-//                ESP_LOGI(TAG, "ELSE1- Bytes: 0x%02x 0x%02x 0x%02x 0x%02x 0x%02x 0x%02x", payload[0], payload[1], payload[2], payload[3], payload[4], payload[5]);
-//                ESP_LOGI(TAG, "ELSE1- payload_size  Nr: %zu", payload_size);
-//                ESP_LOGI(TAG, "ELSE1- ota_data_len_ Nr: %zu", ota_data_len_);
-                
                 ret = esp_ota_write(s_ota_handle, payload , payload_size);
                 ESP_RETURN_ON_ERROR(ret, TAG, "Failed to write OTA data to partition, status: %s", esp_err_to_name(ret));   
             }
@@ -246,8 +213,8 @@ static void esp_zb_task(void *pvParameters)
     /* initialize Zigbee stack */
     esp_zb_cfg_t zb_nwk_cfg = ESP_ZB_ZR_CONFIG();
     esp_zb_init(&zb_nwk_cfg);
-//    tx_power(0) = -24dB
-//    esp_zb_set_tx_power(15);
+    // tx_power(0) = -24dB
+    // esp_zb_set_tx_power(15);
 
     uint8_t test_attr;
     test_attr = 0;
