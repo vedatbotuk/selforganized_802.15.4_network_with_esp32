@@ -1,4 +1,10 @@
 #
+# Serial flasher config
+#
+CONFIG_ESPTOOLPY_FLASHSIZE_4MB=y
+# end of Serial flasher config
+
+#
 # Partition Table
 #
 CONFIG_PARTITION_TABLE_CUSTOM=y
@@ -31,4 +37,18 @@ CONFIG_TASK_WDT_CHECK_IDLE_TASK_CPU0=n
 CONFIG_ZB_ENABLED=y
 CONFIG_ZB_ZCZR=y
 # end of Zboss
+# end of Component config
+
+#
+# Flash Size
+#
+CONFIG_ESPTOOLPY_FLASHSIZE_2MB=y
+# CONFIG_ESPTOOLPY_FLASHSIZE_4MB is not set
+# CONFIG_ESPTOOLPY_FLASHSIZE_8MB is not set
+# CONFIG_ESPTOOLPY_FLASHSIZE_16MB is not set
+# CONFIG_ESPTOOLPY_FLASHSIZE_32MB is not set
+# CONFIG_ESPTOOLPY_FLASHSIZE_64MB is not set
+# CONFIG_ESPTOOLPY_FLASHSIZE_128MB is not set
+CONFIG_ESPTOOLPY_FLASHSIZE="2MB"
+# end of Flash Size
 # end of Component config
