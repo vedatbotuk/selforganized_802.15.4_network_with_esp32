@@ -28,7 +28,7 @@
 
 static char manufacturer[16] = {5, 'B', 'o', 't', 'u', 'k'};
 static char model[16] = {14, 'E', 'S', 'P', '3', '2', 'H', '2', '_', 'R', 'o', 'u', 't', 'e', 'r'};
-static char firmware_version[16] = {6, 'v', 'e', 'r', '0', '.', '3'};
+static char firmware_version[16] = {6, 'v', 'e', 'r', '0', '.', '4'};
 static const char *TAG = "ESP_ZB_ROUTER";
 
 static const esp_partition_t *s_ota_partition = NULL;
@@ -214,7 +214,7 @@ static void esp_zb_task(void *pvParameters)
     esp_zb_cfg_t zb_nwk_cfg = ESP_ZB_ZR_CONFIG();
     esp_zb_init(&zb_nwk_cfg);
     // tx_power(0) = -24dB
-    // esp_zb_set_tx_power(15);
+    esp_zb_set_tx_power(10);
 
     uint8_t test_attr;
     test_attr = 0;
