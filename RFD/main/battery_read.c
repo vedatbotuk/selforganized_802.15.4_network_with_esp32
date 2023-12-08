@@ -16,16 +16,20 @@
 
 const static char *TAG_VOL = "VOLTAGE";
 
-#define VOLTAGE_MAX 8200
+#define VOLTAGE_MAX 9000
 #define VOLTAGE_MIN 7000
 
 /*---------------------------------------------------------------
         ADC General Macros
 ---------------------------------------------------------------*/
 //ADC1 Channels
+#if CONFIG_IDF_TARGET_ESP32C6
+#define EXAMPLE_ADC1_CHAN1          ADC_CHANNEL_3
+#elif CONFIG_IDF_TARGET_ESP32H2
 #define EXAMPLE_ADC1_CHAN1          ADC_CHANNEL_0
-#define EXAMPLE_ADC_ATTEN           ADC_ATTEN_DB_11
+#endif
 
+#define EXAMPLE_ADC_ATTEN           ADC_ATTEN_DB_12
 
 adc_oneshot_unit_handle_t adc1_handle;
 adc_cali_handle_t adc1_cali_chan1_handle = NULL;
@@ -34,16 +38,19 @@ bool do_calibration1_chan1;
 
 static int adc_raw[2][10];
 static int voltage[2][10];
-static int battery_percentage;
+//static int battery_percentage;
 //static int battery_percentage;
 static bool example_adc_calibration_init(adc_unit_t unit, adc_channel_t channel, adc_atten_t atten, adc_cali_handle_t *out_handle);
 void voltage_calculate_init();
 
 int calc_battery_percentage(int adc)
 {
-      int battery_voltage = (float) adc * 49254 / 47000 / 3300 * VOLTAGE_MAX;
-//      ESP_LOGI(TAG_VOL, "Battery voltage: %d mV", battery_voltage);
-      battery_percentage = 100 * (battery_voltage - VOLTAGE_MIN) / (VOLTAGE_MAX - VOLTAGE_MIN);
+    int battery_voltage = (float) adc * 519076 / 470000 / 3300 * VOLTAGE_MAX;
+//    ESP_LOGI(TAG_VOL, " ADC Raw: %d", adc);
+//    ESP_LOGI(TAG_VOL, "Battery voltage: %d mV", battery_voltage);
+    int battery_percentage = 100 * (battery_voltage - VOLTAGE_MIN) / (VOLTAGE_MAX - VOLTAGE_MIN);
+    // (adc - min measured_value on pin with 8,2V) / (8,2(calculated value) - 7(calculated value))
+//    battery_percentage = 100 * (adc - 3566) / (4178 - 3566);
 //      ESP_LOGI(TAG_VOL, "Battery percentage: %d", battery_percentage);
 
     if (battery_percentage < 0)
@@ -58,12 +65,14 @@ int get_battery_level()
 {
     int battery_level = 0;
     
-    ESP_ERROR_CHECK(adc_oneshot_read(adc1_handle, EXAMPLE_ADC1_CHAN1, &adc_raw[0][1]));
-//    ESP_LOGI(TAG_VOL, "ADC%d Channel[%d] Raw Data: %d", ADC_UNIT_1 + 1, EXAMPLE_ADC1_CHAN1, adc_raw[0][1]);
     if (do_calibration1_chan1) {
         ESP_ERROR_CHECK(adc_cali_raw_to_voltage(adc1_cali_chan1_handle, adc_raw[0][1], &voltage[0][1]));
 //        ESP_LOGI(TAG_VOL, "ADC%d Channel[%d] Cali Voltage: %d mV", ADC_UNIT_1 + 1, EXAMPLE_ADC1_CHAN1, voltage[0][1] );
         battery_level = calc_battery_percentage(voltage[0][1]);
+    } else {
+        ESP_ERROR_CHECK(adc_oneshot_read(adc1_handle, EXAMPLE_ADC1_CHAN1, &adc_raw[0][0]));
+//        ESP_LOGI(TAG_VOL, "ADC%d Channel[%d] Raw Data: %d", ADC_UNIT_1 + 1, EXAMPLE_ADC1_CHAN1, adc_raw[0][0]);
+        battery_level = calc_battery_percentage(adc_raw[0][0]);
     }
     
     return battery_level;
