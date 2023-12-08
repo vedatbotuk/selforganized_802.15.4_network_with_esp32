@@ -1,5 +1,5 @@
 idf_component_register(
     SRCS
-    "esp_zb_router.c"
+    "router.c"
     INCLUDE_DIRS "."
 )

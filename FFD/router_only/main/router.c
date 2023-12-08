@@ -22,7 +22,7 @@
 #include <string.h>
 
 #if !defined CONFIG_ZB_ZCZR
-#error Define ZB_ZCZR in idf.py menuconfig to compile light (Router) source code.
+#error Define ZB_ZCZR in idf.py menuconfig to compile router source code.
 #endif
 
 
@@ -142,20 +142,16 @@ static esp_err_t zb_ota_upgrade_status_handler(esp_zb_zcl_ota_upgrade_value_mess
 				payload_size--;
 				ota_header_size_++;
 			}
-
             if (!ota_upgrade_subelement_ && ota_header_size_ == 6) {
                 if (ota_header_[0] == 0 && ota_header_[1] == 0) {
                     ota_upgrade_subelement_ = true;
                     ota_data_len_ =   (((int)ota_header_[5] & 0xFF) << 24)
                                     | (((int)ota_header_[4] & 0xFF) << 16)
                                     | (((int)ota_header_[3] & 0xFF) << 8 )
-                                    |  ((int)ota_header_[2] & 0xFF);
-                                    
+                                    |  ((int)ota_header_[2] & 0xFF);                 
                     ESP_LOGI(TAG, "in if OTA sub-element size %zu", ota_data_len_);
-
                 }
             }  
-           
             if (ota_data_len_) {
                 payload_size = min_size_t(ota_data_len_, payload_size);
                 ota_data_len_ = ota_data_len_ - payload_size;
@@ -163,8 +159,6 @@ static esp_err_t zb_ota_upgrade_status_handler(esp_zb_zcl_ota_upgrade_value_mess
                 ret = esp_ota_write(s_ota_handle, payload , payload_size);
                 ESP_RETURN_ON_ERROR(ret, TAG, "Failed to write OTA data to partition, status: %s", esp_err_to_name(ret));   
             }
-
-         
             break;
         case ESP_ZB_ZCL_OTA_UPGRADE_STATUS_APPLY:
             ESP_LOGI(TAG, "-- OTA upgrade apply");
