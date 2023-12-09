@@ -1,5 +1,5 @@
 idf_component_register(
     SRCS
-    "COORDINATOR.c"
+    "router.c"
     INCLUDE_DIRS "."
 )
