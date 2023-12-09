@@ -17,7 +17,6 @@
 #include "nvs_flash.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
-#include "ha/esp_zigbee_ha_standard.h"
 #include <dht22.h>
 #include "driver/gpio.h"
 #include "battery_read.c"
@@ -47,7 +46,7 @@ RTC_DATA_ATTR uint8_t lastBatteryPercentageRemaining = 0x8C;
 static char manufacturer[16] = {5, 'B', 'o', 't', 'u', 'k'};
 static char model[16] = {15, 'E', 'S', 'P', '3', '2', 'H', '2', ' ', 'E', 'N', 'D', ' ', 'D', 'e', 'v'};
 static char firmware_version[16] = {6, 'v', 'e', 'r', '0', '.', '1'};
-static const char *TAG = "ESP_ZB_TEMPERATURE";
+static const char *TAG = "SENSOR_DEVICE";
 bool connected = false;
 
 static const esp_partition_t *s_ota_partition = NULL;
@@ -66,7 +65,7 @@ static void bdb_start_top_level_commissioning_cb(uint8_t mode_mask)
 void zb_update_temp(int temperature)
 {
     /* Write new temp */
-    esp_zb_zcl_status_t state = esp_zb_zcl_set_attribute_val(HA_ESP_TEMPERATURE_ENDPOINT, ESP_ZB_ZCL_CLUSTER_ID_TEMP_MEASUREMENT, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_TEMP_MEASUREMENT_VALUE_ID, &temperature, false);
+    esp_zb_zcl_status_t state = esp_zb_zcl_set_attribute_val(SENSOR_DEVICE_ENDPOINT, ESP_ZB_ZCL_CLUSTER_ID_TEMP_MEASUREMENT, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_TEMP_MEASUREMENT_VALUE_ID, &temperature, false);
 
     /* Check for error */
     if(state != ESP_ZB_ZCL_STATUS_SUCCESS) {
@@ -81,7 +80,7 @@ void zb_update_temp(int temperature)
 void zb_update_hum(int humidity)
 {
     /* Write new temp */
-    esp_zb_zcl_status_t state = esp_zb_zcl_set_attribute_val(HA_ESP_TEMPERATURE_ENDPOINT, ESP_ZB_ZCL_CLUSTER_ID_REL_HUMIDITY_MEASUREMENT, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_REL_HUMIDITY_MEASUREMENT_VALUE_ID, &humidity, false);
+    esp_zb_zcl_status_t state = esp_zb_zcl_set_attribute_val(SENSOR_DEVICE_ENDPOINT, ESP_ZB_ZCL_CLUSTER_ID_REL_HUMIDITY_MEASUREMENT, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_REL_HUMIDITY_MEASUREMENT_VALUE_ID, &humidity, false);
 
     /* Check for error */
     if(state != ESP_ZB_ZCL_STATUS_SUCCESS) {
@@ -96,7 +95,7 @@ void zb_update_hum(int humidity)
 void zb_update_battery_level(int level)
 {
     /* Write new level */
-    esp_zb_zcl_status_t state = esp_zb_zcl_set_attribute_val(HA_ESP_TEMPERATURE_ENDPOINT, ESP_ZB_ZCL_CLUSTER_ID_POWER_CONFIG,ESP_ZB_ZCL_CLUSTER_SERVER_ROLE,  ESP_ZB_ZCL_ATTR_POWER_CONFIG_BATTERY_PERCENTAGE_REMAINING_ID, &level, false);
+    esp_zb_zcl_status_t state = esp_zb_zcl_set_attribute_val(SENSOR_DEVICE_ENDPOINT, ESP_ZB_ZCL_CLUSTER_ID_POWER_CONFIG,ESP_ZB_ZCL_CLUSTER_SERVER_ROLE,  ESP_ZB_ZCL_ATTR_POWER_CONFIG_BATTERY_PERCENTAGE_REMAINING_ID, &level, false);
 
     /* Check for error */
     if(state != ESP_ZB_ZCL_STATUS_SUCCESS) {
@@ -137,16 +136,16 @@ void measure_temperature()
                 humidity_to_send = (uint16_t) (humidity * 100);
                 battery_level_to_send = (int) (2 * battery_level);
                 ESP_LOGI(TAG, "Temperature write attribute first time, after start.");
-                esp_zb_zcl_set_attribute_val(HA_ESP_TEMPERATURE_ENDPOINT, ESP_ZB_ZCL_CLUSTER_ID_TEMP_MEASUREMENT, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_TEMP_MEASUREMENT_VALUE_ID, &temperature_to_send, false);
-                esp_zb_zcl_set_attribute_val(HA_ESP_TEMPERATURE_ENDPOINT, ESP_ZB_ZCL_CLUSTER_ID_TEMP_MEASUREMENT, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_TEMP_MEASUREMENT_MAX_VALUE_ID, &temperature_max, false); 
-                esp_zb_zcl_set_attribute_val(HA_ESP_TEMPERATURE_ENDPOINT, ESP_ZB_ZCL_CLUSTER_ID_TEMP_MEASUREMENT, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_TEMP_MEASUREMENT_MIN_VALUE_ID, &temperature_min, false);
+                esp_zb_zcl_set_attribute_val(SENSOR_DEVICE_ENDPOINT, ESP_ZB_ZCL_CLUSTER_ID_TEMP_MEASUREMENT, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_TEMP_MEASUREMENT_VALUE_ID, &temperature_to_send, false);
+                esp_zb_zcl_set_attribute_val(SENSOR_DEVICE_ENDPOINT, ESP_ZB_ZCL_CLUSTER_ID_TEMP_MEASUREMENT, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_TEMP_MEASUREMENT_MAX_VALUE_ID, &temperature_max, false); 
+                esp_zb_zcl_set_attribute_val(SENSOR_DEVICE_ENDPOINT, ESP_ZB_ZCL_CLUSTER_ID_TEMP_MEASUREMENT, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_TEMP_MEASUREMENT_MIN_VALUE_ID, &temperature_min, false);
                 
                 ESP_LOGI(TAG, "Humidity write attribute first time, after start.");
-                esp_zb_zcl_set_attribute_val(HA_ESP_TEMPERATURE_ENDPOINT, ESP_ZB_ZCL_CLUSTER_ID_REL_HUMIDITY_MEASUREMENT, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_REL_HUMIDITY_MEASUREMENT_VALUE_ID, &humidity_to_send, false);
-                esp_zb_zcl_set_attribute_val(HA_ESP_TEMPERATURE_ENDPOINT, ESP_ZB_ZCL_CLUSTER_ID_REL_HUMIDITY_MEASUREMENT, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_REL_HUMIDITY_MEASUREMENT_MAX_VALUE_ID, &humidity_max, false); 
-                esp_zb_zcl_set_attribute_val(HA_ESP_TEMPERATURE_ENDPOINT, ESP_ZB_ZCL_CLUSTER_ID_REL_HUMIDITY_MEASUREMENT, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_REL_HUMIDITY_MEASUREMENT_MIN_VALUE_ID, &humidity_min, false);
+                esp_zb_zcl_set_attribute_val(SENSOR_DEVICE_ENDPOINT, ESP_ZB_ZCL_CLUSTER_ID_REL_HUMIDITY_MEASUREMENT, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_REL_HUMIDITY_MEASUREMENT_VALUE_ID, &humidity_to_send, false);
+                esp_zb_zcl_set_attribute_val(SENSOR_DEVICE_ENDPOINT, ESP_ZB_ZCL_CLUSTER_ID_REL_HUMIDITY_MEASUREMENT, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_REL_HUMIDITY_MEASUREMENT_MAX_VALUE_ID, &humidity_max, false); 
+                esp_zb_zcl_set_attribute_val(SENSOR_DEVICE_ENDPOINT, ESP_ZB_ZCL_CLUSTER_ID_REL_HUMIDITY_MEASUREMENT, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_REL_HUMIDITY_MEASUREMENT_MIN_VALUE_ID, &humidity_min, false);
                 
-                esp_zb_zcl_set_attribute_val(HA_ESP_TEMPERATURE_ENDPOINT, ESP_ZB_ZCL_CLUSTER_ID_POWER_CONFIG,ESP_ZB_ZCL_CLUSTER_SERVER_ROLE,  ESP_ZB_ZCL_ATTR_POWER_CONFIG_BATTERY_PERCENTAGE_REMAINING_ID, &battery_level_to_send, false);
+                esp_zb_zcl_set_attribute_val(SENSOR_DEVICE_ENDPOINT, ESP_ZB_ZCL_CLUSTER_ID_POWER_CONFIG,ESP_ZB_ZCL_CLUSTER_SERVER_ROLE,  ESP_ZB_ZCL_ATTR_POWER_CONFIG_BATTERY_PERCENTAGE_REMAINING_ID, &battery_level_to_send, false);
 
                 break;
             } else {
@@ -207,17 +206,17 @@ void esp_zb_app_signal_handler(esp_zb_app_signal_t *signal_struct)
     case ESP_ZB_BDB_SIGNAL_DEVICE_FIRST_START:
     case ESP_ZB_BDB_SIGNAL_DEVICE_REBOOT:
         if (err_status == ESP_OK) {
-            connected = true;
+            
             ESP_LOGI(TAG, "Start network steering");
             esp_zb_bdb_start_top_level_commissioning(ESP_ZB_BDB_MODE_NETWORK_STEERING);
         } else {
-            connected = false;
             /* commissioning failed */
             ESP_LOGW(TAG, "Failed to initialize Zigbee stack (status: %d)", err_status);
         }
         break;
     case ESP_ZB_BDB_SIGNAL_STEERING:
         if (err_status == ESP_OK) {
+            connected = true;
             esp_zb_ieee_addr_t extended_pan_id;
             esp_zb_get_extended_pan_id(extended_pan_id);
             ESP_LOGI(TAG, "Joined network successfully (Extended PAN ID: %02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x, PAN ID: 0x%04hx, Channel:%d, Short Address: 0x%04hx)",
@@ -225,6 +224,7 @@ void esp_zb_app_signal_handler(esp_zb_app_signal_t *signal_struct)
                      extended_pan_id[3], extended_pan_id[2], extended_pan_id[1], extended_pan_id[0],
                      esp_zb_get_pan_id(), esp_zb_get_current_channel(), esp_zb_get_short_address());
         } else {
+            connected = false;
             ESP_LOGI(TAG, "Network steering was not successful (status: %d)", err_status);
             esp_zb_scheduler_alarm((esp_zb_callback_t)bdb_start_top_level_commissioning_cb, ESP_ZB_BDB_MODE_NETWORK_STEERING, 1000);
         }
@@ -454,7 +454,7 @@ static void esp_zb_task(void *pvParameters)
     esp_zb_cluster_list_add_ota_cluster(esp_zb_cluster_list, esp_zb_ota_client_cluster, ESP_ZB_ZCL_CLUSTER_CLIENT_ROLE);
 
     esp_zb_ep_list_t *esp_zb_ep_list = esp_zb_ep_list_create();
-    esp_zb_ep_list_add_ep(esp_zb_ep_list, esp_zb_cluster_list, HA_ESP_TEMPERATURE_ENDPOINT, ESP_ZB_AF_HA_PROFILE_ID, ESP_ZB_HA_TEMPERATURE_SENSOR_DEVICE_ID);
+    esp_zb_ep_list_add_ep(esp_zb_ep_list, esp_zb_cluster_list, SENSOR_DEVICE_ENDPOINT, ESP_ZB_AF_HA_PROFILE_ID, ESP_ZB_HA_TEMPERATURE_SENSOR_DEVICE_ID);
     
     esp_zb_device_register(esp_zb_ep_list);
     esp_zb_core_action_handler_register(zb_action_handler);
