@@ -1,7 +1,4 @@
 idf_component_register(
-    SRCS
-    "router_sensor_device.c"
-    "dht22.c"
-    "battery_read.c"
-    INCLUDE_DIRS "include/"
+    SRCS "router_sensor_device.c"
+    INCLUDE_DIRS "."
 )
