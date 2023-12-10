@@ -39,10 +39,10 @@ int calc_battery_percentage(int adc)
     int battery_voltage = (float) adc * 519076 / 470000 / 3300 * VOLTAGE_MAX;
     int battery_percentage = 100 * (battery_voltage - VOLTAGE_MIN) / (VOLTAGE_MAX - VOLTAGE_MIN);
 
-    if (battery_percentage < 0)
-        battery_percentage = 0;
-    if (battery_percentage > 100)
-        battery_percentage = 100;
+//    if (battery_percentage < 0)
+//        battery_percentage = 0;
+//    if (battery_percentage > 100)
+//        battery_percentage = 100;
     
     return battery_percentage;
 }
