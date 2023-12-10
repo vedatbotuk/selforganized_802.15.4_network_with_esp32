@@ -14,7 +14,7 @@
 
 const static char *TAG_VOL = "VOLTAGE";
 
-#define VOLTAGE_MAX 9000
+#define VOLTAGE_MAX 8200
 #define VOLTAGE_MIN 7000
 
 /*---------------------------------------------------------------
@@ -43,18 +43,18 @@ int calc_battery_percentage(int adc)
 //        battery_percentage = 0;
 //    if (battery_percentage > 100)
 //        battery_percentage = 100;
-    
+
     return battery_percentage;
 }
 
 int get_battery_level()
 {
     int battery_level = 0;
-    
+
     ESP_ERROR_CHECK(adc_oneshot_read(adc1_handle, EXAMPLE_ADC1_CHAN1, &adc_raw[0][0]));
     ESP_LOGI(TAG_VOL, "ADC%d Channel[%d] Raw Data: %d", ADC_UNIT_1 + 1, EXAMPLE_ADC1_CHAN1, adc_raw[0][0]);
     battery_level = calc_battery_percentage(adc_raw[0][0]);
-    
+
     return battery_level;
 }
 
