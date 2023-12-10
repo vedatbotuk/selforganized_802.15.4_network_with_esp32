@@ -2,7 +2,14 @@
 # in this exact order for cmake to work correctly
 cmake_minimum_required(VERSION 3.16)
 set(EXTRA_COMPONENT_DIRS
-    ${CMAKE_CURRENT_SOURCE_DIR}/../../lib
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../components/espressif__esp-zboss-lib
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../components/espressif__esp-zigbee-lib
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../components/battery
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../components/ota
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../components/dht22
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../components/esp_idf_lib_helpers
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../components/ets_sys
     )
 include($ENV{IDF_PATH}/tools/cmake/project.cmake)
 project(router_sensor_device)
+

@@ -39,7 +39,7 @@
 RTC_DATA_ATTR uint8_t lastBatteryPercentageRemaining = 0x8C;
 
 static char manufacturer[16] = {5, 'B', 'o', 't', 'u', 'k'};
-static char model[16] = {15, 'E', 'S', 'P', '3', '2', 'H', '2', ' ', 'E', 'N', 'D', ' ', 'D', 'e', 'v'};
+static char model[16] = {14, 'E', 'S', 'P', '3', '2', 'H', '2', '_', 'R', 'O', 'U', 'T', 'E', 'R'};
 static char firmware_version[16] = {6, 'v', 'e', 'r', '0', '.', '1'};
 static const char *TAG = "SENSOR_DEVICE";
 bool connected = false;
