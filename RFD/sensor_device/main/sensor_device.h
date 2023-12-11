@@ -21,8 +21,8 @@
 #define ESP_OTA_CLIENT_ENDPOINT             5                                       /* OTA endpoint identifier */
 #define OTA_UPGRADE_MANUFACTURER            0x1001                                  /* The attribute indicates the file version of the downloaded image on the device*/
 #define OTA_UPGRADE_IMAGE_TYPE              0x1011                                  /* The attribute indicates the value for the manufacturer of the device */
-#define OTA_UPGRADE_RUNNING_FILE_VERSION    0x01010101                              /* The attribute indicates the file version of the running firmware image on the device */
-#define OTA_UPGRADE_DOWNLOADED_FILE_VERSION 0x01010101                              /* The attribute indicates the file version of the downloaded firmware image on the device */
+#define OTA_UPGRADE_RUNNING_FILE_VERSION    0x01010105                              /* The attribute indicates the file version of the running firmware image on the device */
+#define OTA_UPGRADE_DOWNLOADED_FILE_VERSION 0x01010105                              /* The attribute indicates the file version of the downloaded firmware image on the device */
 #define OTA_UPGRADE_HW_VERSION              0x0101                                  /* The parameter indicates the version of hardware */
 #define OTA_UPGRADE_MAX_DATA_SIZE           64                                      /* The parameter indicates the maximum data size of query block image */
 #define SENSOR_DEVICE_ENDPOINT              10    /* esp light bulb device endpoint, used to process light controlling commands */
