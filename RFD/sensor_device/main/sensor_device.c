@@ -45,7 +45,7 @@ static char manufacturer[16] = {5, 'B', 'o', 't', 'u', 'k'};
 static char model[16] = {15, 'E', 'S', 'P', '3', '2', 'H', '2', ' ', 'E', 'N', 'D', ' ', 'D', 'e', 'v'};
 static char firmware_version[16] = {6, 'v', 'e', 'r', '0', '.', '5'};
 static const char *TAG = "SENSOR_DEVICE";
-bool connected = false;
+bool connected = true;
 
 
 /********************* Define functions **************************/
@@ -198,7 +198,6 @@ void esp_zb_app_signal_handler(esp_zb_app_signal_t *signal_struct)
     case ESP_ZB_BDB_SIGNAL_DEVICE_FIRST_START:
     case ESP_ZB_BDB_SIGNAL_DEVICE_REBOOT:
         if (err_status == ESP_OK) {
-
             ESP_LOGI(TAG, "Start network steering");
             esp_zb_bdb_start_top_level_commissioning(ESP_ZB_BDB_MODE_NETWORK_STEERING);
         } else {
@@ -208,7 +207,7 @@ void esp_zb_app_signal_handler(esp_zb_app_signal_t *signal_struct)
         break;
     case ESP_ZB_BDB_SIGNAL_STEERING:
         if (err_status == ESP_OK) {
-            connected = true;
+//            connected = true;
             esp_zb_ieee_addr_t extended_pan_id;
             esp_zb_get_extended_pan_id(extended_pan_id);
             ESP_LOGI(TAG, "Joined network successfully (Extended PAN ID: %02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x, PAN ID: 0x%04hx, Channel:%d, Short Address: 0x%04hx)",
@@ -216,7 +215,7 @@ void esp_zb_app_signal_handler(esp_zb_app_signal_t *signal_struct)
                      extended_pan_id[3], extended_pan_id[2], extended_pan_id[1], extended_pan_id[0],
                      esp_zb_get_pan_id(), esp_zb_get_current_channel(), esp_zb_get_short_address());
         } else {
-            connected = false;
+//            connected = false;
             ESP_LOGI(TAG, "Network steering was not successful (status: %d)", err_status);
             esp_zb_scheduler_alarm((esp_zb_callback_t)bdb_start_top_level_commissioning_cb, ESP_ZB_BDB_MODE_NETWORK_STEERING, 1000);
         }

@@ -26,7 +26,7 @@
 
 static char manufacturer[16] = {5, 'B', 'o', 't', 'u', 'k'};
 static char model[16] = {14, 'E', 'S', 'P', '3', '2', 'H', '2', '_', 'R', 'o', 'u', 't', 'e', 'r'};
-static char firmware_version[16] = {6, 'v', 'e', 'r', '0', '.', '5'};
+static char firmware_version[16] = {6, 'v', 'e', 'r', '0', '.', '7'};
 static const char *TAG = "ESP_ZB_ROUTER";
 
 
