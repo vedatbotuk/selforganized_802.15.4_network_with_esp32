@@ -25,8 +25,6 @@
 #include "esp_pm.h"
 #include "esp_private/esp_clk.h"
 
-
-
 #if !defined ZB_ED_ROLE
 #error Define ZB_ED_ROLE in idf.py menuconfig to compile RFD (End Device) source code.
 #endif
@@ -43,7 +41,7 @@ RTC_DATA_ATTR uint8_t lastBatteryPercentageRemaining = 0x8C;
 
 static char manufacturer[16] = {5, 'B', 'o', 't', 'u', 'k'};
 static char model[16] = {15, 'E', 'S', 'P', '3', '2', 'H', '2', ' ', 'E', 'N', 'D', ' ', 'D', 'e', 'v'};
-static char firmware_version[16] = {6, 'v', 'e', 'r', '0', '.', '5'};
+static char firmware_version[16] = {6, 'v', 'e', 'r', '0', '.', '8'};
 static const char *TAG = "SENSOR_DEVICE";
 bool connected = false;
 
@@ -88,6 +86,8 @@ void zb_update_battery_level(int level)
 {
     /* Write new level */
     esp_zb_zcl_status_t state = esp_zb_zcl_set_attribute_val(SENSOR_DEVICE_ENDPOINT, ESP_ZB_ZCL_CLUSTER_ID_POWER_CONFIG,ESP_ZB_ZCL_CLUSTER_SERVER_ROLE,  ESP_ZB_ZCL_ATTR_POWER_CONFIG_BATTERY_PERCENTAGE_REMAINING_ID, &level, false);
+    //  TODO: Get Voltage
+    // esp_zb_zcl_status_t state = esp_zb_zcl_set_attribute_val(SENSOR_DEVICE_ENDPOINT, ESP_ZB_ZCL_CLUSTER_ID_POWER_CONFIG, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_POWER_CONFIG_BATTERY_VOLTAGE_ID, &voltage, false);
 
     /* Check for error */
     if(state != ESP_ZB_ZCL_STATUS_SUCCESS) {
@@ -99,85 +99,43 @@ void zb_update_battery_level(int level)
     return;
 }
 
-//TODO: Change function name to measuere_values or something like that.
 void measure_temperature()
 {
     float temperature;
     uint16_t temperature_to_send = 0;
-    uint16_t temperature_max = 50000;
-    uint16_t temperature_min = -1000;
 
     float humidity;
     uint16_t humidity_to_send = 0;
-    //TODO why humidity_max uint32_t
-    uint32_t humidity_max = 100000;
-    uint16_t humidity_min = 0;
 
     int battery_level;
     int battery_level_to_send = 0;
 
-    /* Set min/max temperature values */
-    while (1) {
-        if (connected){
-            if (dht_read_float_data(SENSOR_TYPE, CONFIG_EXAMPLE_DATA_GPIO, &humidity, &temperature) == ESP_OK){
-                ESP_LOGI(TAG, "Temperature : %.1f ℃", temperature);
-                ESP_LOGI(TAG, "Humidity : %.1f %%", humidity);
-                battery_level = get_battery_level();
-                ESP_LOGI(TAG, "Battery level: %d %%", battery_level);
-                temperature_to_send = (uint16_t) (temperature * 100);
-                humidity_to_send = (uint16_t) (humidity * 100);
-                battery_level_to_send = (int) (2 * battery_level);
-                ESP_LOGI(TAG, "Temperature write attribute first time, after start.");
-                esp_zb_zcl_set_attribute_val(SENSOR_DEVICE_ENDPOINT, ESP_ZB_ZCL_CLUSTER_ID_TEMP_MEASUREMENT, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_TEMP_MEASUREMENT_VALUE_ID, &temperature_to_send, false);
-                esp_zb_zcl_set_attribute_val(SENSOR_DEVICE_ENDPOINT, ESP_ZB_ZCL_CLUSTER_ID_TEMP_MEASUREMENT, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_TEMP_MEASUREMENT_MAX_VALUE_ID, &temperature_max, false); 
-                esp_zb_zcl_set_attribute_val(SENSOR_DEVICE_ENDPOINT, ESP_ZB_ZCL_CLUSTER_ID_TEMP_MEASUREMENT, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_TEMP_MEASUREMENT_MIN_VALUE_ID, &temperature_min, false);
-
-                ESP_LOGI(TAG, "Humidity write attribute first time, after start.");
-                esp_zb_zcl_set_attribute_val(SENSOR_DEVICE_ENDPOINT, ESP_ZB_ZCL_CLUSTER_ID_REL_HUMIDITY_MEASUREMENT, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_REL_HUMIDITY_MEASUREMENT_VALUE_ID, &humidity_to_send, false);
-                esp_zb_zcl_set_attribute_val(SENSOR_DEVICE_ENDPOINT, ESP_ZB_ZCL_CLUSTER_ID_REL_HUMIDITY_MEASUREMENT, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_REL_HUMIDITY_MEASUREMENT_MAX_VALUE_ID, &humidity_max, false); 
-                esp_zb_zcl_set_attribute_val(SENSOR_DEVICE_ENDPOINT, ESP_ZB_ZCL_CLUSTER_ID_REL_HUMIDITY_MEASUREMENT, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_REL_HUMIDITY_MEASUREMENT_MIN_VALUE_ID, &humidity_min, false);
-
-                esp_zb_zcl_set_attribute_val(SENSOR_DEVICE_ENDPOINT, ESP_ZB_ZCL_CLUSTER_ID_POWER_CONFIG,ESP_ZB_ZCL_CLUSTER_SERVER_ROLE,  ESP_ZB_ZCL_ATTR_POWER_CONFIG_BATTERY_PERCENTAGE_REMAINING_ID, &battery_level_to_send, false);
-
-                break;
-            } else {
-                ESP_LOGW(TAG, "Could not read data from sensor.");
-            }
-
-        } else {
-            ESP_LOGI(TAG, "Device is not connected!");
-        }
-        vTaskDelay(pdMS_TO_TICKS(5000));
-    }
-
-    /* Wait for next loop mesurement */
-    vTaskDelay(pdMS_TO_TICKS(5000));
-
     /* Measure temperature loop*/
     while (1) {
-        if (connected){
-            if (dht_read_float_data(SENSOR_TYPE, CONFIG_EXAMPLE_DATA_GPIO, &humidity, &temperature) == ESP_OK){
-
+        if (connected) {
+            if (dht_read_float_data(SENSOR_TYPE, CONFIG_EXAMPLE_DATA_GPIO, &humidity, &temperature) == ESP_OK) {
                 ESP_LOGI(TAG, "Temperature : %.1f ℃", temperature);
                 ESP_LOGI(TAG, "Humidity : %.1f %%", humidity);
-                battery_level = get_battery_level();
-                ESP_LOGI(TAG, "Battery level: %d %%", battery_level);
-                temperature_to_send = (uint16_t) (temperature * 100);
-                humidity_to_send = (uint16_t) (humidity * 100);
-                battery_level_to_send = (int) (2 * battery_level);
+
+                temperature_to_send = (uint16_t)(temperature * 100);
+                humidity_to_send = (uint16_t)(humidity * 100);
 
                 ESP_LOGI(TAG, "Temperature changes, will write new value");
                 zb_update_temp(temperature_to_send);
-
                 ESP_LOGI(TAG, "Humidity changes, will write new value");
                 zb_update_hum(humidity_to_send);
-
-                ESP_LOGI(TAG, "Battery level changes, will write new value");
-                zb_update_battery_level(battery_level_to_send);
-
             } else {
-                ESP_LOGW(TAG, "Could not read data from sensor.");
+                ESP_LOGW(TAG, "Could not read data from DHT22 Sensor.");
             }
+
+            if (get_battery_level(&battery_level) == ESP_OK) {
+                ESP_LOGI(TAG, "Battery level: %d %%", battery_level);
+                battery_level_to_send = (int)(2 * battery_level);
+                zb_update_battery_level(battery_level_to_send);
+            } else {
+                ESP_LOGI(TAG, "Battery level changes, will write new value");
+            }
+            
         } else {
             ESP_LOGI(TAG, "Device is not connected!");
         }
@@ -197,6 +155,7 @@ void esp_zb_app_signal_handler(esp_zb_app_signal_t *signal_struct)
         break;
     case ESP_ZB_BDB_SIGNAL_DEVICE_FIRST_START:
     case ESP_ZB_BDB_SIGNAL_DEVICE_REBOOT:
+        connected = false;
         if (err_status == ESP_OK) {
             ESP_LOGI(TAG, "Start network steering");
             esp_zb_bdb_start_top_level_commissioning(ESP_ZB_BDB_MODE_NETWORK_STEERING);
@@ -266,9 +225,10 @@ static void esp_zb_task(void *pvParameters)
     esp_zb_sleep_set_threshold(2000);
     //TODO: Adjust tx_power for end devices to 0.
     /* Set trasmitter power tx_power(0) = -24dB */
-    esp_zb_set_tx_power(0);
+    esp_zb_set_tx_power(2);
 
     uint8_t test_attr;
+    uint8_t power_source = 3;
     test_attr = 0;
     /* basic cluster create with fully customized */
     esp_zb_attribute_list_t *esp_zb_basic_cluster = esp_zb_zcl_attr_list_create(ESP_ZB_ZCL_CLUSTER_ID_BASIC);
@@ -276,8 +236,9 @@ static void esp_zb_task(void *pvParameters)
     esp_zb_basic_cluster_add_attr(esp_zb_basic_cluster, ESP_ZB_ZCL_ATTR_BASIC_MODEL_IDENTIFIER_ID, model);
     esp_zb_basic_cluster_add_attr(esp_zb_basic_cluster, ESP_ZB_ZCL_ATTR_BASIC_SW_BUILD_ID, firmware_version);
     esp_zb_basic_cluster_add_attr(esp_zb_basic_cluster, ESP_ZB_ZCL_ATTR_BASIC_ZCL_VERSION_ID, &test_attr);
-    esp_zb_basic_cluster_add_attr(esp_zb_basic_cluster, ESP_ZB_ZCL_ATTR_BASIC_POWER_SOURCE_ID, &test_attr);
+    esp_zb_basic_cluster_add_attr(esp_zb_basic_cluster, ESP_ZB_ZCL_ATTR_BASIC_POWER_SOURCE_ID, &power_source);
     esp_zb_cluster_update_attr(esp_zb_basic_cluster, ESP_ZB_ZCL_ATTR_BASIC_ZCL_VERSION_ID, &test_attr);
+
     /* identify cluster create with fully customized */
     esp_zb_attribute_list_t *esp_zb_identify_cluster = esp_zb_zcl_attr_list_create(ESP_ZB_ZCL_CLUSTER_ID_IDENTIFY);
     esp_zb_identify_cluster_add_attr(esp_zb_identify_cluster, ESP_ZB_ZCL_ATTR_IDENTIFY_IDENTIFY_TIME_ID, &test_attr);
@@ -286,16 +247,20 @@ static void esp_zb_task(void *pvParameters)
     uint16_t undefined_value;
     undefined_value = 0x8000;
     /* Temperature cluster */
+    uint16_t temperature_max = 50000;
+    uint16_t temperature_min = -1000;
     esp_zb_attribute_list_t *esp_zb_temperature_meas_cluster = esp_zb_zcl_attr_list_create(ESP_ZB_ZCL_CLUSTER_ID_TEMP_MEASUREMENT);
     esp_zb_temperature_meas_cluster_add_attr(esp_zb_temperature_meas_cluster, ESP_ZB_ZCL_ATTR_TEMP_MEASUREMENT_VALUE_ID, &undefined_value);
-    esp_zb_temperature_meas_cluster_add_attr(esp_zb_temperature_meas_cluster, ESP_ZB_ZCL_ATTR_TEMP_MEASUREMENT_MIN_VALUE_ID, &undefined_value);
-    esp_zb_temperature_meas_cluster_add_attr(esp_zb_temperature_meas_cluster, ESP_ZB_ZCL_ATTR_TEMP_MEASUREMENT_MAX_VALUE_ID, &undefined_value);
+    esp_zb_temperature_meas_cluster_add_attr(esp_zb_temperature_meas_cluster, ESP_ZB_ZCL_ATTR_TEMP_MEASUREMENT_MIN_VALUE_ID, &temperature_min);
+    esp_zb_temperature_meas_cluster_add_attr(esp_zb_temperature_meas_cluster, ESP_ZB_ZCL_ATTR_TEMP_MEASUREMENT_MAX_VALUE_ID, &temperature_max);
 
     /* Humidity cluster */
+    uint32_t humidity_max = 100000;
+    uint16_t humidity_min = 0;
     esp_zb_attribute_list_t *esp_zb_hum_meas_cluster = esp_zb_zcl_attr_list_create(ESP_ZB_ZCL_CLUSTER_ID_REL_HUMIDITY_MEASUREMENT);
     esp_zb_humidity_meas_cluster_add_attr(esp_zb_hum_meas_cluster, ESP_ZB_ZCL_ATTR_REL_HUMIDITY_MEASUREMENT_VALUE_ID, &undefined_value);
-    esp_zb_humidity_meas_cluster_add_attr(esp_zb_hum_meas_cluster, ESP_ZB_ZCL_ATTR_REL_HUMIDITY_MEASUREMENT_MIN_VALUE_ID, &undefined_value);
-    esp_zb_humidity_meas_cluster_add_attr(esp_zb_hum_meas_cluster, ESP_ZB_ZCL_ATTR_REL_HUMIDITY_MEASUREMENT_MAX_VALUE_ID, &undefined_value);
+    esp_zb_humidity_meas_cluster_add_attr(esp_zb_hum_meas_cluster, ESP_ZB_ZCL_ATTR_REL_HUMIDITY_MEASUREMENT_MIN_VALUE_ID, &humidity_min);
+    esp_zb_humidity_meas_cluster_add_attr(esp_zb_hum_meas_cluster, ESP_ZB_ZCL_ATTR_REL_HUMIDITY_MEASUREMENT_MAX_VALUE_ID, &humidity_max);
 
     //TODO: add power_cluster for battery
     /* POWER_CONFIG cluster */
