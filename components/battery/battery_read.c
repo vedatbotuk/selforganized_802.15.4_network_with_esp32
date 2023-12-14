@@ -24,8 +24,6 @@ const static char *TAG_VOL = "VOLTAGE";
 /*---------------------------------------------------------------
         ADC General Macros
 ---------------------------------------------------------------*/
-static bool example_adc_calibration_init(adc_unit_t unit, adc_channel_t channel, adc_atten_t atten, adc_cali_handle_t *out_handle);
-
 //ADC1 Channels
 #if CONFIG_IDF_TARGET_ESP32C6
 #define EXAMPLE_ADC1_CHAN0          ADC_CHANNEL_3
