@@ -73,7 +73,7 @@ esp_err_t get_battery_level(int *battery_level, int *voltage_cal)
     } else {
         ESP_ERROR_CHECK(adc_oneshot_read(adc1_handle, EXAMPLE_ADC1_CHAN0, &adc_raw[0][0]));
         ESP_LOGI(TAG_VOL, "ADC%d Channel[%d] Raw Data: %d", ADC_UNIT_1 + 1, EXAMPLE_ADC1_CHAN0, adc_raw[0][0]);
-        *voltage_cal = adc_raw[0][0];
+        *voltage_cal = adc_raw[0][0] / 10;
         *battery_level = calc_battery_percentage(adc_raw[0][0]);
     }
     
