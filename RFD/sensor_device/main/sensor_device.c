@@ -41,7 +41,7 @@ RTC_DATA_ATTR uint8_t lastBatteryPercentageRemaining = 0x8C;
 
 static char manufacturer[16] = {5, 'B', 'o', 't', 'u', 'k'};
 static char model[16] = {15, 'E', 'S', 'P', '3', '2', 'H', '2', ' ', 'E', 'N', 'D', ' ', 'D', 'e', 'v'};
-static char firmware_version[16] = {6, 'v', 'e', 'r', '0', '.', '8'};
+static char firmware_version[16] = {7, 'v', 'e', 'r', '0', '.', '1', '0'};
 static const char *TAG = "SENSOR_DEVICE";
 bool connected = false;
 
@@ -82,16 +82,21 @@ void zb_update_hum(int humidity)
     return;
 }
 
-void zb_update_battery_level(int level)
+void zb_update_battery_level(int level, int voltage)
 {
     /* Write new level */
-    esp_zb_zcl_status_t state = esp_zb_zcl_set_attribute_val(SENSOR_DEVICE_ENDPOINT, ESP_ZB_ZCL_CLUSTER_ID_POWER_CONFIG,ESP_ZB_ZCL_CLUSTER_SERVER_ROLE,  ESP_ZB_ZCL_ATTR_POWER_CONFIG_BATTERY_PERCENTAGE_REMAINING_ID, &level, false);
-    //  TODO: Get Voltage
-    // esp_zb_zcl_status_t state = esp_zb_zcl_set_attribute_val(SENSOR_DEVICE_ENDPOINT, ESP_ZB_ZCL_CLUSTER_ID_POWER_CONFIG, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_POWER_CONFIG_BATTERY_VOLTAGE_ID, &voltage, false);
+    esp_zb_zcl_status_t state_level = esp_zb_zcl_set_attribute_val(SENSOR_DEVICE_ENDPOINT, ESP_ZB_ZCL_CLUSTER_ID_POWER_CONFIG,ESP_ZB_ZCL_CLUSTER_SERVER_ROLE,  ESP_ZB_ZCL_ATTR_POWER_CONFIG_BATTERY_PERCENTAGE_REMAINING_ID, &level, false);
+    esp_zb_zcl_status_t state_voltage = esp_zb_zcl_set_attribute_val(SENSOR_DEVICE_ENDPOINT, ESP_ZB_ZCL_CLUSTER_ID_POWER_CONFIG, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_POWER_CONFIG_BATTERY_VOLTAGE_ID, &voltage, false);
 
     /* Check for error */
-    if(state != ESP_ZB_ZCL_STATUS_SUCCESS) {
+    if(state_level != ESP_ZB_ZCL_STATUS_SUCCESS) {
         ESP_LOGE(TAG, "Setting battery level attribute failed!");
+        return;
+    }
+
+    if (state_voltage != ESP_ZB_ZCL_STATUS_SUCCESS)
+    {
+        ESP_LOGE(TAG, "Setting battery voltage attribute failed!");
         return;
     }
 
@@ -108,7 +113,9 @@ void measure_temperature()
     uint16_t humidity_to_send = 0;
 
     int battery_level;
+    int battery_voltage;
     int battery_level_to_send = 0;
+    int battery_voltage_to_send = 0;
 
     /* Measure temperature loop*/
     while (1) {
@@ -128,12 +135,15 @@ void measure_temperature()
                 ESP_LOGW(TAG, "Could not read data from DHT22 Sensor.");
             }
 
-            if (get_battery_level(&battery_level) == ESP_OK) {
+            if (get_battery_level(&battery_level, &battery_voltage) == ESP_OK) {
                 ESP_LOGI(TAG, "Battery level: %d %%", battery_level);
+                ESP_LOGI(TAG, "Battery voltage: %d mV", battery_voltage);
                 battery_level_to_send = (int)(2 * battery_level);
-                zb_update_battery_level(battery_level_to_send);
+                battery_voltage_to_send = (int)(battery_voltage);
+
+                zb_update_battery_level(battery_level_to_send, battery_voltage_to_send);
             } else {
-                ESP_LOGI(TAG, "Battery level changes, will write new value");
+                ESP_LOGI(TAG, "Could not read battery level and voltage data.");
             }
             
         } else {
@@ -155,7 +165,6 @@ void esp_zb_app_signal_handler(esp_zb_app_signal_t *signal_struct)
         break;
     case ESP_ZB_BDB_SIGNAL_DEVICE_FIRST_START:
     case ESP_ZB_BDB_SIGNAL_DEVICE_REBOOT:
-        connected = false;
         if (err_status == ESP_OK) {
             ESP_LOGI(TAG, "Start network steering");
             esp_zb_bdb_start_top_level_commissioning(ESP_ZB_BDB_MODE_NETWORK_STEERING);
@@ -225,7 +234,7 @@ static void esp_zb_task(void *pvParameters)
     esp_zb_sleep_set_threshold(2000);
     //TODO: Adjust tx_power for end devices to 0.
     /* Set trasmitter power tx_power(0) = -24dB */
-    esp_zb_set_tx_power(2);
+    esp_zb_set_tx_power(5);
 
     uint8_t test_attr;
     uint8_t power_source = 3;
