@@ -24,17 +24,13 @@ const static char *TAG_VOL = "VOLTAGE";
 /*---------------------------------------------------------------
         ADC General Macros
 ---------------------------------------------------------------*/
-#if (SOC_ADC_PERIPH_NUM >= 2) && !CONFIG_IDF_TARGET_ESP32C3
-#define EXAMPLE_USE_ADC2 1
-#endif
-
 static bool example_adc_calibration_init(adc_unit_t unit, adc_channel_t channel, adc_atten_t atten, adc_cali_handle_t *out_handle);
 
 //ADC1 Channels
 #if CONFIG_IDF_TARGET_ESP32C6
 #define EXAMPLE_ADC1_CHAN0          ADC_CHANNEL_3
 #elif CONFIG_IDF_TARGET_ESP32H2
-#define EXAMPLE_ADC1_CHAN0         ADC_CHANNEL_0
+#define EXAMPLE_ADC1_CHAN0          ADC_CHANNEL_0
 #endif
 
 #define EXAMPLE_ADC_ATTEN           ADC_ATTEN_DB_12
@@ -57,10 +53,6 @@ int calc_battery_percentage(int adc)
     ESP_LOGI(TAG_VOL, " ADC Raw: %d", adc);
     ESP_LOGI(TAG_VOL, "Battery voltage: %d mV", battery_voltage);
     int battery_percentage = 100 * (battery_voltage - VOLTAGE_MIN) / (VOLTAGE_MAX - VOLTAGE_MIN);
-    // (adc - min measured_value on pin with 8,2V) / (8,2(calculated value) - 7(calculated value))
-//    battery_percentage = 100 * (adc - 3566) / (4178 - 3566);
-//      ESP_LOGI(TAG_VOL, "Battery percentage: %d", battery_percentage);
-
 
     if (battery_percentage < 0)
         battery_percentage = 0;
