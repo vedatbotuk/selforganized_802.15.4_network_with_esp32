@@ -191,6 +191,13 @@ void esp_zb_app_signal_handler(esp_zb_app_signal_t *signal_struct)
             esp_zb_scheduler_alarm((esp_zb_callback_t)bdb_start_top_level_commissioning_cb, ESP_ZB_BDB_MODE_NETWORK_STEERING, 1000);
         }
         break;
+    case ESP_ZB_ZDO_SIGNAL_LEAVE:
+        leave_params = (esp_zb_zdo_signal_leave_params_t *)esp_zb_app_signal_get_params(p_sg_p);
+        if (leave_params->leave_type == ESP_ZB_NWK_LEAVE_TYPE_RESET) {
+            ESP_LOGI(TAG, "Reset device");
+            esp_zb_factory_reset();
+        }
+        break;
       case ESP_ZB_COMMON_SIGNAL_CAN_SLEEP:
         ESP_LOGI(TAG, "Zigbee can sleep");
         esp_zb_sleep_now();
