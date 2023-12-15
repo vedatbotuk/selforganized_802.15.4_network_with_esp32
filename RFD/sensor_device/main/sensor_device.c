@@ -158,6 +158,7 @@ void esp_zb_app_signal_handler(esp_zb_app_signal_t *signal_struct)
     uint32_t *p_sg_p       = signal_struct->p_app_signal;
     esp_err_t err_status = signal_struct->esp_err_status;
     esp_zb_app_signal_type_t sig_type = *p_sg_p;
+    esp_zb_zdo_signal_leave_params_t *leave_params = NULL;
     switch (sig_type) {
     case ESP_ZB_ZDO_SIGNAL_SKIP_STARTUP:
         ESP_LOGI(TAG, "Zigbee stack initialized");
