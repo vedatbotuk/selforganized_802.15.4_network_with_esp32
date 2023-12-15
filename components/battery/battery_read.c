@@ -27,7 +27,7 @@ const static char *TAG_VOL = "VOLTAGE";
 
 static adc_oneshot_unit_handle_t adc1_handle;
 static int adc_raw[2][10];
-void voltage_calculate_init();
+esp_err_t voltage_calculate_init(void);
 
 int calc_battery_percentage(int adc)
 {
@@ -67,12 +67,15 @@ esp_err_t voltage_calculate_init(void)
         .bitwidth = ADC_BITWIDTH_DEFAULT,
         .atten = EXAMPLE_ADC_ATTEN,
     };
-    
-    esp_err_t err;
-    err = ESP_ERROR_CHECK(adc_oneshot_config_channel(adc1_handle, EXAMPLE_ADC1_CHAN0, &config));
-    if (err != ESP_OK) {
-        return err;
-    }
+
+    ESP_ERROR_CHECK(adc_oneshot_config_channel(adc1_handle, EXAMPLE_ADC1_CHAN0, &config));
+
+    // TODO 
+    // esp_err_t err;
+    // err = ESP_ERROR_CHECK(adc_oneshot_config_channel(adc1_handle, EXAMPLE_ADC1_CHAN0, &config));
+    // if (err != ESP_OK) {
+        // return err;
+    // }
 
     return ESP_OK;
 }
