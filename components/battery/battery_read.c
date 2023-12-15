@@ -54,10 +54,9 @@ esp_err_t get_battery_level(int *battery_level, int *voltage_cal)
     return ESP_OK;
 }
 
-void voltage_calculate_init()
+esp_err_t voltage_calculate_init(void)
 {
     //-------------ADC1 Init---------------//
-//    adc_oneshot_unit_handle_t adc1_handle;
     adc_oneshot_unit_init_cfg_t init_config1 = {
         .unit_id = ADC_UNIT_1,
     };
@@ -68,5 +67,12 @@ void voltage_calculate_init()
         .bitwidth = ADC_BITWIDTH_DEFAULT,
         .atten = EXAMPLE_ADC_ATTEN,
     };
-    ESP_ERROR_CHECK(adc_oneshot_config_channel(adc1_handle, EXAMPLE_ADC1_CHAN0, &config));
+    
+    esp_err_t err;
+    err = ESP_ERROR_CHECK(adc_oneshot_config_channel(adc1_handle, EXAMPLE_ADC1_CHAN0, &config));
+    if (err != ESP_OK) {
+        return err;
+    }
+
+    return ESP_OK;
 }
