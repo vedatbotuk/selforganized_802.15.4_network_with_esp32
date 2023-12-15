@@ -22,8 +22,7 @@
 #include "battery_read.c"
 #include "zcl/esp_zigbee_zcl_power_config.h"
 #include "ota.c"
-#include "esp_pm.h"
-#include "esp_private/esp_clk.h"
+#include "deep_sleep.c"
 
 #if !defined ZB_ED_ROLE
 #error Define ZB_ED_ROLE in idf.py menuconfig to compile RFD (End Device) source code.
@@ -43,7 +42,6 @@ static char manufacturer[16] = {5, 'B', 'o', 't', 'u', 'k'};
 static char model[16] = {15, 'E', 'S', 'P', '3', '2', 'H', '2', ' ', 'E', 'N', 'D', ' ', 'D', 'e', 'v'};
 static char firmware_version[16] = {7, 'v', 'e', 'r', '0', '.', '1', '0'};
 static const char *TAG = "SENSOR_DEVICE";
-bool connected = false;
 
 
 /********************* Define functions **************************/
@@ -54,12 +52,24 @@ static void bdb_start_top_level_commissioning_cb(uint8_t mode_mask)
 
 void zb_update_temp(int temperature)
 {
-    /* Write new temp */
-    esp_zb_zcl_status_t state = esp_zb_zcl_set_attribute_val(SENSOR_DEVICE_ENDPOINT, ESP_ZB_ZCL_CLUSTER_ID_TEMP_MEASUREMENT, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_TEMP_MEASUREMENT_VALUE_ID, &temperature, false);
+    static esp_zb_zcl_report_attr_cmd_t temp_measurement_cmd_req = {};
+    temp_measurement_cmd_req.zcl_basic_cmd.src_endpoint = SENSOR_DEVICE_ENDPOINT;
+    temp_measurement_cmd_req.address_mode = ESP_ZB_APS_ADDR_MODE_DST_ADDR_ENDP_NOT_PRESENT;
+    temp_measurement_cmd_req.clusterID = ESP_ZB_ZCL_CLUSTER_ID_TEMP_MEASUREMENT;
+    temp_measurement_cmd_req.cluster_role = ESP_ZB_ZCL_CLUSTER_SERVER_ROLE;
 
+    esp_zb_zcl_status_t state = esp_zb_zcl_set_attribute_val(SENSOR_DEVICE_ENDPOINT, ESP_ZB_ZCL_CLUSTER_ID_TEMP_MEASUREMENT, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_TEMP_MEASUREMENT_VALUE_ID, &temperature, false);
+    if (state != ESP_OK)
+    {
+        ESP_LOGE(TAG, "Sending temp attribute report command failed!");
+        return;
+    }
+
+    /* Request sending new phase voltage */
+    esp_err_t state1 = esp_zb_zcl_report_attr_cmd_req(&temp_measurement_cmd_req);
     /* Check for error */
-    if(state != ESP_ZB_ZCL_STATUS_SUCCESS) {
-        ESP_LOGE(TAG, "Setting temp attribute failed!");
+    if(state1 != ESP_OK) {
+        ESP_LOGE(TAG, "Sending temp attribute report command failed!");
         return;
     }
 
@@ -69,11 +79,25 @@ void zb_update_temp(int temperature)
 
 void zb_update_hum(int humidity)
 {
+    static esp_zb_zcl_report_attr_cmd_t humidity_measurement_cmd_req = {};
+    humidity_measurement_cmd_req.zcl_basic_cmd.src_endpoint = SENSOR_DEVICE_ENDPOINT;
+    humidity_measurement_cmd_req.address_mode = ESP_ZB_APS_ADDR_MODE_DST_ADDR_ENDP_NOT_PRESENT;
+    humidity_measurement_cmd_req.clusterID = ESP_ZB_ZCL_CLUSTER_ID_REL_HUMIDITY_MEASUREMENT;
+    humidity_measurement_cmd_req.attributeID = ESP_ZB_ZCL_ATTR_REL_HUMIDITY_MEASUREMENT_VALUE_ID;
+    humidity_measurement_cmd_req.cluster_role = ESP_ZB_ZCL_CLUSTER_SERVER_ROLE;
+
     /* Write new temp */
     esp_zb_zcl_status_t state = esp_zb_zcl_set_attribute_val(SENSOR_DEVICE_ENDPOINT, ESP_ZB_ZCL_CLUSTER_ID_REL_HUMIDITY_MEASUREMENT, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_REL_HUMIDITY_MEASUREMENT_VALUE_ID, &humidity, false);
-
     /* Check for error */
-    if(state != ESP_ZB_ZCL_STATUS_SUCCESS) {
+    if (state != ESP_ZB_ZCL_STATUS_SUCCESS)
+    {
+        ESP_LOGE(TAG, "Setting hum attribute failed!");
+        return;
+    }
+
+    esp_err_t state1 = esp_zb_zcl_report_attr_cmd_req(&humidity_measurement_cmd_req);
+    /* Check for error */
+    if(state1 != ESP_ZB_ZCL_STATUS_SUCCESS) {
         ESP_LOGE(TAG, "Setting hum attribute failed!");
         return;
     }
@@ -84,6 +108,13 @@ void zb_update_hum(int humidity)
 
 void zb_update_battery_level(int level, int voltage)
 {
+    static esp_zb_zcl_report_attr_cmd_t battery_level_measurement_cmd_req = {};
+    battery_level_measurement_cmd_req.zcl_basic_cmd.src_endpoint = SENSOR_DEVICE_ENDPOINT;
+    battery_level_measurement_cmd_req.address_mode = ESP_ZB_APS_ADDR_MODE_DST_ADDR_ENDP_NOT_PRESENT;
+    battery_level_measurement_cmd_req.clusterID = ESP_ZB_ZCL_CLUSTER_ID_POWER_CONFIG;
+    battery_level_measurement_cmd_req.attributeID = ESP_ZB_ZCL_ATTR_POWER_CONFIG_BATTERY_PERCENTAGE_REMAINING_ID;
+    battery_level_measurement_cmd_req.cluster_role = ESP_ZB_ZCL_CLUSTER_SERVER_ROLE;
+
     /* Write new level */
     esp_zb_zcl_status_t state_level = esp_zb_zcl_set_attribute_val(SENSOR_DEVICE_ENDPOINT, ESP_ZB_ZCL_CLUSTER_ID_POWER_CONFIG,ESP_ZB_ZCL_CLUSTER_SERVER_ROLE,  ESP_ZB_ZCL_ATTR_POWER_CONFIG_BATTERY_PERCENTAGE_REMAINING_ID, &level, false);
     esp_zb_zcl_status_t state_voltage = esp_zb_zcl_set_attribute_val(SENSOR_DEVICE_ENDPOINT, ESP_ZB_ZCL_CLUSTER_ID_POWER_CONFIG, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_POWER_CONFIG_BATTERY_VOLTAGE_ID, &voltage, false);
@@ -93,10 +124,18 @@ void zb_update_battery_level(int level, int voltage)
         ESP_LOGE(TAG, "Setting battery level attribute failed!");
         return;
     }
-
+    
     if (state_voltage != ESP_ZB_ZCL_STATUS_SUCCESS)
     {
         ESP_LOGE(TAG, "Setting battery voltage attribute failed!");
+        return;
+    }
+
+    esp_err_t state1 = esp_zb_zcl_report_attr_cmd_req(&battery_level_measurement_cmd_req);
+    /* Check for error */
+    if (state1 != ESP_ZB_ZCL_STATUS_SUCCESS)
+    {
+        ESP_LOGE(TAG, "Setting battery attributes failed!");
         return;
     }
 
@@ -118,38 +157,33 @@ void measure_temperature()
     int battery_voltage_to_send = 0;
 
     /* Measure temperature loop*/
-    while (1) {
-        if (connected) {
-            if (dht_read_float_data(SENSOR_TYPE, CONFIG_EXAMPLE_DATA_GPIO, &humidity, &temperature) == ESP_OK) {
-                ESP_LOGI(TAG, "Temperature : %.1f ℃", temperature);
-                ESP_LOGI(TAG, "Humidity : %.1f %%", humidity);
+    if (dht_read_float_data(SENSOR_TYPE, CONFIG_EXAMPLE_DATA_GPIO, &humidity, &temperature) == ESP_OK)
+    {
+        ESP_LOGI(TAG, "Temperature : %.1f ℃", temperature);
+        ESP_LOGI(TAG, "Humidity : %.1f %%", humidity);
 
-                temperature_to_send = (uint16_t)(temperature * 100);
-                humidity_to_send = (uint16_t)(humidity * 100);
+        temperature_to_send = (uint16_t)(temperature * 100);
+        humidity_to_send = (uint16_t)(humidity * 100);
 
-                ESP_LOGI(TAG, "Temperature changes, will write new value");
-                zb_update_temp(temperature_to_send);
-                ESP_LOGI(TAG, "Humidity changes, will write new value");
-                zb_update_hum(humidity_to_send);
-            } else {
-                ESP_LOGW(TAG, "Could not read data from DHT22 Sensor.");
-            }
+        ESP_LOGI(TAG, "Temperature changes, will write new value");
+        zb_update_temp(temperature_to_send);
+        ESP_LOGI(TAG, "Humidity changes, will write new value");
+        zb_update_hum(humidity_to_send);
+    }
+    else
+    {
+        ESP_LOGW(TAG, "Could not read data from DHT22 Sensor.");
+    }
 
-            if (get_battery_level(&battery_level, &battery_voltage) == ESP_OK) {
-                ESP_LOGI(TAG, "Battery level: %d %%", battery_level);
-                ESP_LOGI(TAG, "Battery voltage: %d mV", battery_voltage);
-                battery_level_to_send = (int)(2 * battery_level);
-                battery_voltage_to_send = (int)(battery_voltage);
+    if (get_battery_level(&battery_level, &battery_voltage) == ESP_OK) {
+        ESP_LOGI(TAG, "Battery level: %d %%", battery_level);
+        ESP_LOGI(TAG, "Battery voltage: %d mV", battery_voltage);
+        battery_level_to_send = (int)(2 * battery_level);
+        battery_voltage_to_send = (int)(battery_voltage);
 
-                zb_update_battery_level(battery_level_to_send, battery_voltage_to_send);
-            } else {
-                ESP_LOGI(TAG, "Could not read battery level and voltage data.");
-            }
-            
-        } else {
-            ESP_LOGI(TAG, "Device is not connected!");
-        }
-        vTaskDelay(pdMS_TO_TICKS(60000));
+        zb_update_battery_level(battery_level_to_send, battery_voltage_to_send);
+    } else {
+        ESP_LOGI(TAG, "Could not read battery level and voltage data.");
     }
 }
 
@@ -166,28 +200,33 @@ void esp_zb_app_signal_handler(esp_zb_app_signal_t *signal_struct)
         break;
     case ESP_ZB_BDB_SIGNAL_DEVICE_FIRST_START:
     case ESP_ZB_BDB_SIGNAL_DEVICE_REBOOT:
-        if (err_status == ESP_OK) {
-            if (esp_zb_bdb_is_factory_new()) {
-                ESP_LOGI(TAG, "Start network steering");
-                esp_zb_bdb_start_top_level_commissioning(ESP_ZB_BDB_MODE_NETWORK_STEERING);
-            } else {
-                ESP_LOGI(TAG, "Device restarted");
-            }
-        } else {
-            ESP_LOGW(TAG, "Failed to initialize Zigbee stack (status: %s)", esp_err_to_name(err_status));
+        if (err_status == ESP_OK)
+        {
+            ESP_LOGI(TAG, "Start network steering");
+            esp_zb_bdb_start_top_level_commissioning(ESP_ZB_BDB_MODE_NETWORK_STEERING);
+        }
+        else
+        {
+            /* commissioning failed */
+            ESP_LOGW(TAG, "Failed to initialize Zigbee stack (status: %d)", err_status);
+            esp_zb_scheduler_alarm((esp_zb_callback_t)bdb_start_top_level_commissioning_cb, ESP_ZB_BDB_MODE_NETWORK_STEERING, 1000);
         }
         break;
     case ESP_ZB_BDB_SIGNAL_STEERING:
         if (err_status == ESP_OK) {
-            connected = true;
             esp_zb_ieee_addr_t extended_pan_id;
             esp_zb_get_extended_pan_id(extended_pan_id);
             ESP_LOGI(TAG, "Joined network successfully (Extended PAN ID: %02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x, PAN ID: 0x%04hx, Channel:%d, Short Address: 0x%04hx)",
                      extended_pan_id[7], extended_pan_id[6], extended_pan_id[5], extended_pan_id[4],
                      extended_pan_id[3], extended_pan_id[2], extended_pan_id[1], extended_pan_id[0],
                      esp_zb_get_pan_id(), esp_zb_get_current_channel(), esp_zb_get_short_address());
+            
+            /* Start the one-shot timer */
+            const int before_deep_sleep_time_sec = 5;
+            ESP_LOGI(TAG, "Start one-shot timer for %ds to enter the deep sleep", before_deep_sleep_time_sec);
+            measure_temperature();
+            ESP_ERROR_CHECK(esp_timer_start_once(s_oneshot_timer, before_deep_sleep_time_sec * 1000000));
         } else {
-            connected = false;
             ESP_LOGI(TAG, "Network steering was not successful (status: %d)", err_status);
             esp_zb_scheduler_alarm((esp_zb_callback_t)bdb_start_top_level_commissioning_cb, ESP_ZB_BDB_MODE_NETWORK_STEERING, 1000);
         }
@@ -201,7 +240,6 @@ void esp_zb_app_signal_handler(esp_zb_app_signal_t *signal_struct)
         break;
       case ESP_ZB_COMMON_SIGNAL_CAN_SLEEP:
         ESP_LOGI(TAG, "Zigbee can sleep");
-        esp_zb_sleep_now();
         break;
     default:
         ESP_LOGI(TAG, "ZDO signal: %s (0x%x), status: %s", esp_zb_zdo_signal_to_string(sig_type), sig_type, esp_err_to_name(err_status));
@@ -223,26 +261,11 @@ static esp_err_t zb_action_handler(esp_zb_core_action_callback_id_t callback_id,
     return ret;
 }
 
-static esp_err_t esp_zb_power_save_init(void)
-{
-    esp_err_t rc = ESP_OK;
-    int cur_cpu_freq_mhz = CONFIG_ESP_DEFAULT_CPU_FREQ_MHZ;
-    esp_pm_config_t pm_config = {
-        .max_freq_mhz = cur_cpu_freq_mhz,
-        .min_freq_mhz = cur_cpu_freq_mhz,
-        .light_sleep_enable = true
-    };
-    rc = esp_pm_configure(&pm_config);
-    return rc;
-}
-
 static void esp_zb_task(void *pvParameters)
 {
     /* initialize Zigbee stack */
     esp_zb_cfg_t zb_nwk_cfg = ESP_ZB_ZED_CONFIG();
-    esp_zb_sleep_enable(true);
     esp_zb_init(&zb_nwk_cfg);
-    esp_zb_sleep_set_threshold(2000);
     //TODO: Adjust tx_power for end devices to 0.
     /* Set trasmitter power tx_power(0) = -24dB */
     esp_zb_set_tx_power(5);
@@ -350,10 +373,9 @@ void app_main(void) {
     };
 
     ESP_ERROR_CHECK(voltage_calculate_init());
-
     ESP_ERROR_CHECK(nvs_flash_init());
     ESP_ERROR_CHECK(esp_zb_platform_config(&config));
-    ESP_ERROR_CHECK(esp_zb_power_save_init());
-    xTaskCreate(measure_temperature, "measure_temperature", configMINIMAL_STACK_SIZE * 3, NULL, 5, NULL);
+    zb_deep_sleep_init();
+    // xTaskCreate(measure_temperature, "measure_temperature", configMINIMAL_STACK_SIZE * 3, NULL, 5, NULL);
     xTaskCreate(esp_zb_task, "Zigbee_main", 4096, NULL, 6, NULL);
 }
