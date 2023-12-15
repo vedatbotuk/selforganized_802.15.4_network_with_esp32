@@ -349,7 +349,7 @@ void app_main(void) {
         .host_config = ESP_ZB_DEFAULT_HOST_CONFIG(),
     };
 
-    voltage_calculate_init();
+    ESP_ERROR_CHECK(voltage_calculate_init());
 
     ESP_ERROR_CHECK(nvs_flash_init());
     ESP_ERROR_CHECK(esp_zb_platform_config(&config));
