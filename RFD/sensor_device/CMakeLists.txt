@@ -9,8 +9,6 @@ set(EXTRA_COMPONENT_DIRS
     ${CMAKE_CURRENT_SOURCE_DIR}/../../components/dht22
     ${CMAKE_CURRENT_SOURCE_DIR}/../../components/esp_idf_lib_helpers
     ${CMAKE_CURRENT_SOURCE_DIR}/../../components/ets_sys
-    ${CMAKE_CURRENT_SOURCE_DIR}/../../components/sleep
-
     )
 include($ENV{IDF_PATH}/tools/cmake/project.cmake)
 project(sensor_device)
