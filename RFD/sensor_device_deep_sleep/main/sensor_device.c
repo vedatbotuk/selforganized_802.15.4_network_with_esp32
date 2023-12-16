@@ -23,6 +23,7 @@
 #include "zcl/esp_zigbee_zcl_power_config.h"
 #include "ota.c"
 #include "deep_sleep.c"
+#include "update_cluster.h"
 
 #if !defined ZB_ED_ROLE
 #error Define ZB_ED_ROLE in idf.py menuconfig to compile RFD (End Device) source code.
@@ -48,99 +49,6 @@ static const char *TAG = "SENSOR_DEVICE";
 static void bdb_start_top_level_commissioning_cb(uint8_t mode_mask)
 {
     ESP_ERROR_CHECK(esp_zb_bdb_start_top_level_commissioning(mode_mask));
-}
-
-void zb_update_temp(int temperature)
-{
-    static esp_zb_zcl_report_attr_cmd_t temp_measurement_cmd_req = {};
-    temp_measurement_cmd_req.zcl_basic_cmd.src_endpoint = SENSOR_DEVICE_ENDPOINT;
-    temp_measurement_cmd_req.address_mode = ESP_ZB_APS_ADDR_MODE_DST_ADDR_ENDP_NOT_PRESENT;
-    temp_measurement_cmd_req.clusterID = ESP_ZB_ZCL_CLUSTER_ID_TEMP_MEASUREMENT;
-    temp_measurement_cmd_req.cluster_role = ESP_ZB_ZCL_CLUSTER_SERVER_ROLE;
-
-    esp_zb_zcl_status_t state = esp_zb_zcl_set_attribute_val(SENSOR_DEVICE_ENDPOINT, ESP_ZB_ZCL_CLUSTER_ID_TEMP_MEASUREMENT, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_TEMP_MEASUREMENT_VALUE_ID, &temperature, false);
-    if (state != ESP_OK)
-    {
-        ESP_LOGE(TAG, "Sending temp attribute report command failed!");
-        return;
-    }
-
-    /* Request sending new phase voltage */
-    esp_err_t state1 = esp_zb_zcl_report_attr_cmd_req(&temp_measurement_cmd_req);
-    /* Check for error */
-    if(state1 != ESP_OK) {
-        ESP_LOGE(TAG, "Sending temp attribute report command failed!");
-        return;
-    }
-
-    ESP_LOGI(TAG, "Setting temp success");
-    return;
-}
-
-void zb_update_hum(int humidity)
-{
-    static esp_zb_zcl_report_attr_cmd_t humidity_measurement_cmd_req = {};
-    humidity_measurement_cmd_req.zcl_basic_cmd.src_endpoint = SENSOR_DEVICE_ENDPOINT;
-    humidity_measurement_cmd_req.address_mode = ESP_ZB_APS_ADDR_MODE_DST_ADDR_ENDP_NOT_PRESENT;
-    humidity_measurement_cmd_req.clusterID = ESP_ZB_ZCL_CLUSTER_ID_REL_HUMIDITY_MEASUREMENT;
-    humidity_measurement_cmd_req.attributeID = ESP_ZB_ZCL_ATTR_REL_HUMIDITY_MEASUREMENT_VALUE_ID;
-    humidity_measurement_cmd_req.cluster_role = ESP_ZB_ZCL_CLUSTER_SERVER_ROLE;
-
-    /* Write new temp */
-    esp_zb_zcl_status_t state = esp_zb_zcl_set_attribute_val(SENSOR_DEVICE_ENDPOINT, ESP_ZB_ZCL_CLUSTER_ID_REL_HUMIDITY_MEASUREMENT, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_REL_HUMIDITY_MEASUREMENT_VALUE_ID, &humidity, false);
-    /* Check for error */
-    if (state != ESP_ZB_ZCL_STATUS_SUCCESS)
-    {
-        ESP_LOGE(TAG, "Setting hum attribute failed!");
-        return;
-    }
-
-    esp_err_t state1 = esp_zb_zcl_report_attr_cmd_req(&humidity_measurement_cmd_req);
-    /* Check for error */
-    if(state1 != ESP_ZB_ZCL_STATUS_SUCCESS) {
-        ESP_LOGE(TAG, "Setting hum attribute failed!");
-        return;
-    }
-
-    ESP_LOGI(TAG, "Setting hum success");
-    return;
-}
-
-void zb_update_battery_level(int level, int voltage)
-{
-    static esp_zb_zcl_report_attr_cmd_t battery_level_measurement_cmd_req = {};
-    battery_level_measurement_cmd_req.zcl_basic_cmd.src_endpoint = SENSOR_DEVICE_ENDPOINT;
-    battery_level_measurement_cmd_req.address_mode = ESP_ZB_APS_ADDR_MODE_DST_ADDR_ENDP_NOT_PRESENT;
-    battery_level_measurement_cmd_req.clusterID = ESP_ZB_ZCL_CLUSTER_ID_POWER_CONFIG;
-    battery_level_measurement_cmd_req.attributeID = ESP_ZB_ZCL_ATTR_POWER_CONFIG_BATTERY_PERCENTAGE_REMAINING_ID;
-    battery_level_measurement_cmd_req.cluster_role = ESP_ZB_ZCL_CLUSTER_SERVER_ROLE;
-
-    /* Write new level */
-    esp_zb_zcl_status_t state_level = esp_zb_zcl_set_attribute_val(SENSOR_DEVICE_ENDPOINT, ESP_ZB_ZCL_CLUSTER_ID_POWER_CONFIG,ESP_ZB_ZCL_CLUSTER_SERVER_ROLE,  ESP_ZB_ZCL_ATTR_POWER_CONFIG_BATTERY_PERCENTAGE_REMAINING_ID, &level, false);
-    esp_zb_zcl_status_t state_voltage = esp_zb_zcl_set_attribute_val(SENSOR_DEVICE_ENDPOINT, ESP_ZB_ZCL_CLUSTER_ID_POWER_CONFIG, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_POWER_CONFIG_BATTERY_VOLTAGE_ID, &voltage, false);
-
-    /* Check for error */
-    if(state_level != ESP_ZB_ZCL_STATUS_SUCCESS) {
-        ESP_LOGE(TAG, "Setting battery level attribute failed!");
-        return;
-    }
-    
-    if (state_voltage != ESP_ZB_ZCL_STATUS_SUCCESS)
-    {
-        ESP_LOGE(TAG, "Setting battery voltage attribute failed!");
-        return;
-    }
-
-    esp_err_t state1 = esp_zb_zcl_report_attr_cmd_req(&battery_level_measurement_cmd_req);
-    /* Check for error */
-    if (state1 != ESP_ZB_ZCL_STATUS_SUCCESS)
-    {
-        ESP_LOGE(TAG, "Setting battery attributes failed!");
-        return;
-    }
-
-    ESP_LOGI(TAG, "Setting battery level success");
-    return;
 }
 
 void measure_temperature()
