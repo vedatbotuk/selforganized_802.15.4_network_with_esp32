@@ -133,6 +133,7 @@ void esp_zb_app_signal_handler(esp_zb_app_signal_t *signal_struct)
             const int before_deep_sleep_time_sec = 5;
             ESP_LOGI(TAG, "Start one-shot timer for %ds to enter the deep sleep", before_deep_sleep_time_sec);
             measure_temperature();
+            // TODO: For OTA update will be need a if condition.
             ESP_ERROR_CHECK(esp_timer_start_once(s_oneshot_timer, before_deep_sleep_time_sec * 1000000));
         } else {
             ESP_LOGI(TAG, "Network steering was not successful (status: %d)", err_status);

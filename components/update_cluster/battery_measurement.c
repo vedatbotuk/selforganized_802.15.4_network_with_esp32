@@ -1,15 +1,22 @@
-void zb_update_battery_level(int level, int voltage)
+#include <stdint.h>
+#include "esp_zigbee_core.h"
+#include "zcl/esp_zigbee_zcl_power_config.h"
+#include "esp_log.h"
+
+static const char *TAG = "UPDATE_BATTERY_CLUSTER";
+
+void zb_update_battery_level(int level, int voltage, uint8_t endpoint)
 {
     static esp_zb_zcl_report_attr_cmd_t battery_level_measurement_cmd_req = {};
-    battery_level_measurement_cmd_req.zcl_basic_cmd.src_endpoint = SENSOR_DEVICE_ENDPOINT;
+    battery_level_measurement_cmd_req.zcl_basic_cmd.src_endpoint = endpoint;
     battery_level_measurement_cmd_req.address_mode = ESP_ZB_APS_ADDR_MODE_DST_ADDR_ENDP_NOT_PRESENT;
     battery_level_measurement_cmd_req.clusterID = ESP_ZB_ZCL_CLUSTER_ID_POWER_CONFIG;
     battery_level_measurement_cmd_req.attributeID = ESP_ZB_ZCL_ATTR_POWER_CONFIG_BATTERY_PERCENTAGE_REMAINING_ID;
     battery_level_measurement_cmd_req.cluster_role = ESP_ZB_ZCL_CLUSTER_SERVER_ROLE;
 
     /* Write new level */
-    esp_zb_zcl_status_t state_level = esp_zb_zcl_set_attribute_val(SENSOR_DEVICE_ENDPOINT, ESP_ZB_ZCL_CLUSTER_ID_POWER_CONFIG,ESP_ZB_ZCL_CLUSTER_SERVER_ROLE,  ESP_ZB_ZCL_ATTR_POWER_CONFIG_BATTERY_PERCENTAGE_REMAINING_ID, &level, false);
-    esp_zb_zcl_status_t state_voltage = esp_zb_zcl_set_attribute_val(SENSOR_DEVICE_ENDPOINT, ESP_ZB_ZCL_CLUSTER_ID_POWER_CONFIG, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_POWER_CONFIG_BATTERY_VOLTAGE_ID, &voltage, false);
+    esp_zb_zcl_status_t state_level = esp_zb_zcl_set_attribute_val(endpoint, ESP_ZB_ZCL_CLUSTER_ID_POWER_CONFIG, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_POWER_CONFIG_BATTERY_PERCENTAGE_REMAINING_ID, &level, false);
+    esp_zb_zcl_status_t state_voltage = esp_zb_zcl_set_attribute_val(endpoint, ESP_ZB_ZCL_CLUSTER_ID_POWER_CONFIG, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_POWER_CONFIG_BATTERY_VOLTAGE_ID, &voltage, false);
 
     /* Check for error */
     if(state_level != ESP_ZB_ZCL_STATUS_SUCCESS) {
