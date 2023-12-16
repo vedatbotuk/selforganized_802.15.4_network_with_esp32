@@ -74,9 +74,9 @@ void measure_temperature()
         humidity_to_send = (uint16_t)(humidity * 100);
 
         ESP_LOGI(TAG, "Temperature changes, will write new value");
-        zb_update_temp(temperature_to_send);
+        zb_update_temp(temperature_to_send, SENSOR_DEVICE_ENDPOINT);
         ESP_LOGI(TAG, "Humidity changes, will write new value");
-        zb_update_hum(humidity_to_send);
+        zb_update_hum(humidity_to_send, SENSOR_DEVICE_ENDPOINT);
     }
     else
     {
@@ -89,7 +89,7 @@ void measure_temperature()
         battery_level_to_send = (int)(2 * battery_level);
         battery_voltage_to_send = (int)(battery_voltage);
 
-        zb_update_battery_level(battery_level_to_send, battery_voltage_to_send);
+        zb_update_battery_level(battery_level_to_send, battery_voltage_to_send, SENSOR_DEVICE_ENDPOINT);
     } else {
         ESP_LOGI(TAG, "Could not read battery level and voltage data.");
     }

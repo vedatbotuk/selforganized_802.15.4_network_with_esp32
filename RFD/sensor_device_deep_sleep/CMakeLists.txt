@@ -10,6 +10,7 @@ set(EXTRA_COMPONENT_DIRS
     ${CMAKE_CURRENT_SOURCE_DIR}/../../components/esp_idf_lib_helpers
     ${CMAKE_CURRENT_SOURCE_DIR}/../../components/ets_sys
     ${CMAKE_CURRENT_SOURCE_DIR}/../../components/sleep
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../components/update_cluster
 
     )
 include($ENV{IDF_PATH}/tools/cmake/project.cmake)
