@@ -170,15 +170,7 @@ static esp_err_t zb_action_handler(esp_zb_core_action_callback_id_t callback_id,
     return ret;
 }
 
-static void esp_zb_task(void *pvParameters)
-{
-    /* initialize Zigbee stack */
-    esp_zb_cfg_t zb_nwk_cfg = ESP_ZB_ZED_CONFIG();
-    esp_zb_init(&zb_nwk_cfg);
-    //TODO: Adjust tx_power for end devices to 0.
-    /* Set trasmitter power tx_power(0) = -24dB */
-    esp_zb_set_tx_power(5);
-
+void create_basic_cluster() {   
     uint8_t test_attr;
     uint8_t power_source = 3;
     test_attr = 0;
@@ -190,12 +182,17 @@ static void esp_zb_task(void *pvParameters)
     esp_zb_basic_cluster_add_attr(esp_zb_basic_cluster, ESP_ZB_ZCL_ATTR_BASIC_ZCL_VERSION_ID, &test_attr);
     esp_zb_basic_cluster_add_attr(esp_zb_basic_cluster, ESP_ZB_ZCL_ATTR_BASIC_POWER_SOURCE_ID, &power_source);
     esp_zb_cluster_update_attr(esp_zb_basic_cluster, ESP_ZB_ZCL_ATTR_BASIC_ZCL_VERSION_ID, &test_attr);
+}
 
+void create_identify_cluster() {
+    uint8_t test_attr;
     /* identify cluster create with fully customized */
     esp_zb_attribute_list_t *esp_zb_identify_cluster = esp_zb_zcl_attr_list_create(ESP_ZB_ZCL_CLUSTER_ID_IDENTIFY);
     esp_zb_identify_cluster_add_attr(esp_zb_identify_cluster, ESP_ZB_ZCL_ATTR_IDENTIFY_IDENTIFY_TIME_ID, &test_attr);
     /* create client role of the cluster */
+}
 
+void create_temp_cluster() {
     uint16_t undefined_value;
     undefined_value = 0x8000;
     /* Temperature cluster */
@@ -205,7 +202,9 @@ static void esp_zb_task(void *pvParameters)
     esp_zb_temperature_meas_cluster_add_attr(esp_zb_temperature_meas_cluster, ESP_ZB_ZCL_ATTR_TEMP_MEASUREMENT_VALUE_ID, &undefined_value);
     esp_zb_temperature_meas_cluster_add_attr(esp_zb_temperature_meas_cluster, ESP_ZB_ZCL_ATTR_TEMP_MEASUREMENT_MIN_VALUE_ID, &temperature_min);
     esp_zb_temperature_meas_cluster_add_attr(esp_zb_temperature_meas_cluster, ESP_ZB_ZCL_ATTR_TEMP_MEASUREMENT_MAX_VALUE_ID, &temperature_max);
+}
 
+void create_hum_cluster() {
     /* Humidity cluster */
     uint32_t humidity_max = 100000;
     uint16_t humidity_min = 0;
@@ -213,7 +212,9 @@ static void esp_zb_task(void *pvParameters)
     esp_zb_humidity_meas_cluster_add_attr(esp_zb_hum_meas_cluster, ESP_ZB_ZCL_ATTR_REL_HUMIDITY_MEASUREMENT_VALUE_ID, &undefined_value);
     esp_zb_humidity_meas_cluster_add_attr(esp_zb_hum_meas_cluster, ESP_ZB_ZCL_ATTR_REL_HUMIDITY_MEASUREMENT_MIN_VALUE_ID, &humidity_min);
     esp_zb_humidity_meas_cluster_add_attr(esp_zb_hum_meas_cluster, ESP_ZB_ZCL_ATTR_REL_HUMIDITY_MEASUREMENT_MAX_VALUE_ID, &humidity_max);
+}
 
+void create_battery_cluster() {
     //TODO: add power_cluster for battery
     /* POWER_CONFIG cluster */
     esp_zb_power_config_cluster_cfg_t power_cfg = {0};
@@ -238,8 +239,9 @@ static void esp_zb_task(void *pvParameters)
     {
         esp_zb_power_cluster = esp_zb_power_cluster->next;
     }
+}
 
-
+void create_ota_cluster() {
     /* OTA Upgrade Cluster*/
     esp_zb_ota_cluster_cfg_t ota_cluster_cfg = {
         .ota_upgrade_file_version = OTA_UPGRADE_RUNNING_FILE_VERSION,
@@ -255,6 +257,23 @@ static void esp_zb_task(void *pvParameters)
         .max_data_size = OTA_UPGRADE_MAX_DATA_SIZE,
     };
     esp_zb_ota_cluster_add_attr(esp_zb_ota_client_cluster, ESP_ZB_ZCL_ATTR_OTA_UPGRADE_CLIENT_DATA_ID, (void *)&variable_config);
+}
+
+static void esp_zb_task(void *pvParameters)
+{
+    /* initialize Zigbee stack */
+    esp_zb_cfg_t zb_nwk_cfg = ESP_ZB_ZED_CONFIG();
+    esp_zb_init(&zb_nwk_cfg);
+    //TODO: Adjust tx_power for end devices to 0.
+    /* Set trasmitter power tx_power(0) = -24dB */
+    esp_zb_set_tx_power(5);
+
+    create_basic_cluster();
+    create_identify_cluster();
+    create_temp_cluster();
+    create_hum_cluster();
+    create_battery_cluster();
+    create_oto_cluster();
 
     /* create cluster lists for this endpoint */
     esp_zb_cluster_list_t *esp_zb_cluster_list = esp_zb_zcl_cluster_list_create();
