@@ -5,7 +5,7 @@
 
 static const char *TAG = "UPDATE_TEMP_CLUSTER";
 
-void zb_update_temp(int temperature, uint8_t endpoint)
+void zb_update_temp(int16_t temperature, uint8_t endpoint)
 {
     static esp_zb_zcl_report_attr_cmd_t temp_measurement_cmd_req = {};
     temp_measurement_cmd_req.zcl_basic_cmd.src_endpoint = endpoint;
