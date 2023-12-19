@@ -4,13 +4,13 @@ cmake_minimum_required(VERSION 3.16)
 set(EXTRA_COMPONENT_DIRS
     ${CMAKE_CURRENT_SOURCE_DIR}/../../components/espressif__esp-zboss-lib
     ${CMAKE_CURRENT_SOURCE_DIR}/../../components/espressif__esp-zigbee-lib
-    ${CMAKE_CURRENT_SOURCE_DIR}/../../components/battery
     ${CMAKE_CURRENT_SOURCE_DIR}/../../components/ota
     ${CMAKE_CURRENT_SOURCE_DIR}/../../components/dht22
     ${CMAKE_CURRENT_SOURCE_DIR}/../../components/esp_idf_lib_helpers
     ${CMAKE_CURRENT_SOURCE_DIR}/../../components/ets_sys
     ${CMAKE_CURRENT_SOURCE_DIR}/../../components/update_cluster
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../components/create_cluster
     )
 include($ENV{IDF_PATH}/tools/cmake/project.cmake)
-project(sensor_device)
+project(sensor_device_light_sleep)
 
