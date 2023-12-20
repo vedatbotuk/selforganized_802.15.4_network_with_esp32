@@ -19,10 +19,7 @@
 #include "ota.c"
 #include "update_cluster.h"
 #include "create_cluster.h"
-#ifdef CONFIG_PM_ENABLE
-#include "esp_pm.h"
-#include "esp_private/esp_clk.h"
-#endif
+#include "light_sleep.h"
 
 #if !defined ZB_ED_ROLE
 #error Define ZB_ED_ROLE in idf.py menuconfig to compile RFD (End Device) source code.
@@ -50,7 +47,7 @@ static void bdb_start_top_level_commissioning_cb(uint8_t mode_mask)
 void measure_temperature()
 {
     float temperature;
-    uint16_t temperature_to_send = 0;
+    int16_t temperature_to_send = 0;
 
     float humidity;
     uint16_t humidity_to_send = 0;
@@ -65,7 +62,7 @@ void measure_temperature()
                 ESP_LOGI(TAG, "Temperature : %.1f ℃", temperature);
                 ESP_LOGI(TAG, "Humidity : %.1f %%", humidity);
 
-                temperature_to_send = (uint16_t)(temperature * 100);
+                temperature_to_send = (int16_t)(temperature * 100);
                 humidity_to_send = (uint16_t)(humidity * 100);
 
                 ESP_LOGI(TAG, "Temperature changes, will write new value");
@@ -82,7 +79,7 @@ void measure_temperature()
         {
             ESP_LOGI(TAG, "Device is not connected!");
         }
-        vTaskDelay(pdMS_TO_TICKS(60000));
+        vTaskDelay(pdMS_TO_TICKS(300000));
     }
 }
 
@@ -168,28 +165,15 @@ static esp_err_t zb_action_handler(esp_zb_core_action_callback_id_t callback_id,
     return ret;
 }
 
-static esp_err_t esp_zb_power_save_init(void)
-{
-    esp_err_t rc = ESP_OK;
-    int cur_cpu_freq_mhz = CONFIG_ESP_DEFAULT_CPU_FREQ_MHZ;
-    esp_pm_config_t pm_config = {
-        .max_freq_mhz = cur_cpu_freq_mhz,
-        .min_freq_mhz = cur_cpu_freq_mhz,
-        .light_sleep_enable = true};
-    rc = esp_pm_configure(&pm_config);
-    return rc;
-}
-
 static void esp_zb_task(void *pvParameters)
 {
     /* initialize Zigbee stack */
     esp_zb_cfg_t zb_nwk_cfg = ESP_ZB_ZED_CONFIG();
-    esp_zb_sleep_enable(true);
+    /* The order in the following 3 lines must not be changed. */
+    sleep_enable();
     esp_zb_init(&zb_nwk_cfg);
-    esp_zb_sleep_set_threshold(4000);
-    // TODO: Adjust tx_power for end devices to 0.
-    /* Set trasmitter power tx_power(0) = -24dB */
-    esp_zb_set_tx_power(5);
+    sleep_configure();
+    esp_zb_set_tx_power(TX_POWER);
 
     /* create cluster lists for this endpoint */
     esp_zb_cluster_list_t *esp_zb_cluster_list = esp_zb_zcl_cluster_list_create();
@@ -225,7 +209,7 @@ void app_main(void)
 
     ESP_ERROR_CHECK(nvs_flash_init());
     ESP_ERROR_CHECK(esp_zb_platform_config(&config));
-    ESP_ERROR_CHECK(esp_zb_power_save_init());
+    ESP_ERROR_CHECK(esp_zb_power_save_init(CONFIG_ESP_DEFAULT_CPU_FREQ_MHZ));
     xTaskCreate(measure_temperature, "measure_temperature", configMINIMAL_STACK_SIZE * 3, NULL, 5, NULL);
     xTaskCreate(esp_zb_task, "Zigbee_main", 4096, NULL, 6, NULL);
 }

@@ -12,11 +12,10 @@
  * CONDITIONS OF ANY KIND, either express or implied.
  */
 
-#ifndef ZIGBEE_SLEEPY_END_DEVICE_H
-#define ZIGBEE_SLEEPY_END_DEVICE_H
+#ifndef DEEP_SLEEP_H
+#define DEEP_SLEEP_H
 
 #include "esp_check.h"
-#include "nvs_flash.h"
 #include "esp_log.h"
 #include "esp_timer.h"
 #include "time.h"
@@ -26,25 +25,17 @@
 #include "esp_sleep.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
-#include "ha/esp_zigbee_ha_standard.h"
-
-#ifdef CONFIG_PM_ENABLE
-#include "esp_pm.h"
-#include "esp_private/esp_clk.h"
-#endif
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-extern const char *TAG_SLEEP;
-extern RTC_DATA_ATTR struct timeval s_sleep_enter_time;
-extern esp_timer_handle_t s_oneshot_timer;
-
+static const int before_deep_sleep_time_sec = 5;
+void start_deep_sleep(void);
 void zb_deep_sleep_init(void);
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* ZIGBEE_SLEEPY_END_DEVICE_H */
+#endif /* DEEP_SLEEP_H */

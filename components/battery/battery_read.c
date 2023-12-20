@@ -73,7 +73,11 @@ esp_err_t voltage_calculate_init(void)
         .atten = EXAMPLE_ADC_ATTEN,
     };
 
-    ESP_ERROR_CHECK(adc_oneshot_config_channel(adc1_handle, EXAMPLE_ADC1_CHAN0, &config));
+    // ESP_ERROR_CHECK(adc_oneshot_config_channel(adc1_handle, EXAMPLE_ADC1_CHAN0, &config));
+
+    esp_err_t res = adc_oneshot_config_channel(adc1_handle, EXAMPLE_ADC1_CHAN0, &config);
+    if (res != ESP_OK)
+        return res;
 
     // TODO
     // esp_err_t err;

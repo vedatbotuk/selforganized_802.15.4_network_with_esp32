@@ -18,7 +18,7 @@
 #include "dht22.h"
 #include "battery_read.c"
 #include "ota.c"
-#include "deep_sleep.c"
+#include "deep_sleep.h"
 #include "update_cluster.h"
 #include "create_cluster.h"
 
@@ -107,11 +107,11 @@ void esp_zb_app_signal_handler(esp_zb_app_signal_t *signal_struct)
                      esp_zb_get_pan_id(), esp_zb_get_current_channel(), esp_zb_get_short_address());
             
             /* Start the one-shot timer */
-            const int before_deep_sleep_time_sec = 5;
             ESP_LOGI(TAG, "Start one-shot timer for %ds to enter the deep sleep", before_deep_sleep_time_sec);
             measure_temperature();
             // TODO: For OTA update will be need a if condition.
-            ESP_ERROR_CHECK(esp_timer_start_once(s_oneshot_timer, before_deep_sleep_time_sec * 1000000));
+            start_deep_sleep();
+            
         } else {
             ESP_LOGI(TAG, "Network steering was not successful (status: %d)", err_status);
             esp_zb_scheduler_alarm((esp_zb_callback_t)bdb_start_top_level_commissioning_cb, ESP_ZB_BDB_MODE_NETWORK_STEERING, 1000);

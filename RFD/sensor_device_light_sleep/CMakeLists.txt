@@ -10,6 +10,7 @@ set(EXTRA_COMPONENT_DIRS
     ${CMAKE_CURRENT_SOURCE_DIR}/../../components/ets_sys
     ${CMAKE_CURRENT_SOURCE_DIR}/../../components/update_cluster
     ${CMAKE_CURRENT_SOURCE_DIR}/../../components/create_cluster
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../components/sleep
     )
 include($ENV{IDF_PATH}/tools/cmake/project.cmake)
 project(sensor_device_light_sleep)
