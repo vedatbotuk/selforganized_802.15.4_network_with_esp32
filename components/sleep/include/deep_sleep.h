@@ -16,6 +16,7 @@
 #define DEEP_SLEEP_H
 
 #include "esp_check.h"
+#include "nvs_flash.h"
 #include "esp_log.h"
 #include "esp_timer.h"
 #include "time.h"
@@ -25,6 +26,9 @@
 #include "esp_sleep.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
+#include "esp_pm.h"
+#include "esp_private/esp_clk.h"
+
 
 #ifdef __cplusplus
 extern "C" {
