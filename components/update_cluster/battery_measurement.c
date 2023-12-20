@@ -5,7 +5,7 @@
 
 static const char *TAG = "UPDATE_BATTERY_CLUSTER";
 
-void zb_update_battery_level(int level, int voltage, uint8_t endpoint)
+void zb_update_battery_level(uint8_t level, int8_t voltage, uint8_t endpoint)
 {
     static esp_zb_zcl_report_attr_cmd_t battery_level_measurement_cmd_req = {};
     battery_level_measurement_cmd_req.zcl_basic_cmd.src_endpoint = endpoint;

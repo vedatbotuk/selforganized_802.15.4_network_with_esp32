@@ -34,7 +34,7 @@ static adc_oneshot_unit_handle_t adc1_handle;
 static int adc_raw[2][10];
 esp_err_t voltage_calculate_init(void);
 
-int calc_battery_percentage(int adc)
+uint8_t calc_battery_percentage(int adc)
 {
     int battery_voltage = (float)adc * 519076 / 470000 / 3300 * VOLTAGE_MAX;
     ESP_LOGI(TAG_VOL, " ADC Raw: %d", adc);
@@ -47,13 +47,13 @@ int calc_battery_percentage(int adc)
     return battery_percentage;
 }
 
-esp_err_t get_battery_level(int *battery_level, int *voltage_cal)
+esp_err_t get_battery_level(uint8_t *battery_level, uint8_t *voltage_cal)
 {
     CHECK_ARG(battery_level || voltage_cal);
     ESP_ERROR_CHECK(adc_oneshot_read(adc1_handle, EXAMPLE_ADC1_CHAN0, &adc_raw[0][0]));
     ESP_LOGI(TAG_VOL, "ADC%d Channel[%d] Raw Data: %d", ADC_UNIT_1 + 1, EXAMPLE_ADC1_CHAN0, adc_raw[0][0]);
 
-    *voltage_cal = adc_raw[0][0] / 10;
+    *voltage_cal = (uint8_t)(adc_raw[0][0] / 10);
     *battery_level = calc_battery_percentage(adc_raw[0][0]);
 
     return ESP_OK;
@@ -73,7 +73,11 @@ esp_err_t voltage_calculate_init(void)
         .atten = EXAMPLE_ADC_ATTEN,
     };
 
-    ESP_ERROR_CHECK(adc_oneshot_config_channel(adc1_handle, EXAMPLE_ADC1_CHAN0, &config));
+    // ESP_ERROR_CHECK(adc_oneshot_config_channel(adc1_handle, EXAMPLE_ADC1_CHAN0, &config));
+
+    esp_err_t res = adc_oneshot_config_channel(adc1_handle, EXAMPLE_ADC1_CHAN0, &config);
+    if (res != ESP_OK)
+        return res;
 
     // TODO
     // esp_err_t err;

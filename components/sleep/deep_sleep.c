@@ -11,6 +11,7 @@
  * software is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR
  * CONDITIONS OF ANY KIND, either express or implied.
  */
+#include "deep_sleep.h"
 #include "esp_check.h"
 #include "nvs_flash.h"
 #include "esp_log.h"
@@ -22,21 +23,10 @@
 #include "esp_sleep.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
-#include "ha/esp_zigbee_ha_standard.h"
-
-#ifdef CONFIG_PM_ENABLE
 #include "esp_pm.h"
 #include "esp_private/esp_clk.h"
-#endif
-/**
- * @note Make sure set idf.py menuconfig in zigbee component as zigbee end device!
- */
-#if !defined ZB_ED_ROLE
-#error Define ZB_ED_ROLE in idf.py menuconfig to compile light (End Device) source code.
-#endif
 
 static const char *TAG_SLEEP = "ESP_ZB_DEEP_SLEEP";
-
 static RTC_DATA_ATTR struct timeval s_sleep_enter_time;
 static esp_timer_handle_t s_oneshot_timer;
 
@@ -47,6 +37,11 @@ static void s_oneshot_timer_callback(void *arg)
     ESP_LOGI(TAG_SLEEP, "Enter deep sleep");
     gettimeofday(&s_sleep_enter_time, NULL);
     esp_deep_sleep_start();
+}
+
+void start_deep_sleep()
+{
+    ESP_ERROR_CHECK(esp_timer_start_once(s_oneshot_timer, before_deep_sleep_time_sec * 1000000));
 }
 
 void zb_deep_sleep_init()
@@ -88,7 +83,7 @@ void zb_deep_sleep_init()
 
     /* Set the methods of how to wake up: */
     /* 1. RTC timer waking-up */
-    const int wakeup_time_sec = 600;
+    const int wakeup_time_sec = 1800;
     ESP_LOGI(TAG_SLEEP, "Enabling timer wakeup, %ds\n", wakeup_time_sec);
     ESP_ERROR_CHECK(esp_sleep_enable_timer_wakeup(wakeup_time_sec * 1000000));
 
