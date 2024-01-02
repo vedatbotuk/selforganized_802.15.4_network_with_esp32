@@ -13,5 +13,5 @@ set(EXTRA_COMPONENT_DIRS
     ${CMAKE_CURRENT_SOURCE_DIR}/../../components/create_cluster
     )
 include($ENV{IDF_PATH}/tools/cmake/project.cmake)
-project(router_sensor_device)
+project(sensor_device)
 
