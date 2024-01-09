@@ -26,7 +26,7 @@
 #define OTA_UPGRADE_HW_VERSION              0x0101                                  /* The parameter indicates the version of hardware */
 #define SENSOR_DEVICE_ENDPOINT              10    /* esp light bulb device endpoint, used to process light controlling commands */
 #define ESP_ZB_PRIMARY_CHANNEL_MASK         (1l << 25)  /* Zigbee primary channel mask use in the example */
-#define TX_POWER 5                                      /* Set TX Power (min=0 - max=15). Set trasmitter power tx_power(0) = -24dB*/
+#define TX_POWER                            0           /* Set TX Power (min=0 - max=15). Set trasmitter power tx_power(0) = -24dB*/
 
 #define ESP_ZB_ZED_CONFIG()                                         \
     {                                                               \

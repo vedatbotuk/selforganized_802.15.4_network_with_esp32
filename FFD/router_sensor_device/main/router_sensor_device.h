@@ -25,7 +25,7 @@
 #define OTA_UPGRADE_HW_VERSION              0x0101                                  /* The parameter indicates the version of hardware */
 #define OTA_UPGRADE_MAX_DATA_SIZE           64                                      /* The parameter indicates the maximum data size of query block image */
 #define ROUTER_SENSOR_DEVICE_ENDPOINT       10    /* esp light bulb device endpoint, used to process light controlling commands */
-#define ESP_ZB_PRIMARY_CHANNEL_MASK         (1l << 25)  /* Zigbee primary channel mask use in the example */
+#define ESP_ZB_PRIMARY_CHANNEL_MASK         (1l << 11)  /* Zigbee primary channel mask use in the example */
 
 #define ESP_ZB_ZR_CONFIG()                                                              \
     {                                                                                   \
