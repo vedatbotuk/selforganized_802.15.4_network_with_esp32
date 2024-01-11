@@ -79,8 +79,7 @@ void measure_temperature()
         {
             ESP_LOGI(TAG, "Device is not connected!");
         }
-//        vTaskDelay(pdMS_TO_TICKS(1800000));
-        vTaskDelay(pdMS_TO_TICKS(10000));
+        vTaskDelay(pdMS_TO_TICKS(60000));
     }
 }
 
