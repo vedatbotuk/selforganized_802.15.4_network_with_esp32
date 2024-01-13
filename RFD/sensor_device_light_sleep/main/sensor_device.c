@@ -79,7 +79,7 @@ void measure_temperature()
         {
             ESP_LOGI(TAG, "Device is not connected!");
         }
-        vTaskDelay(pdMS_TO_TICKS(300000));
+        vTaskDelay(pdMS_TO_TICKS(60000));
     }
 }
 
@@ -97,21 +97,12 @@ void esp_zb_app_signal_handler(esp_zb_app_signal_t *signal_struct)
         break;
     case ESP_ZB_BDB_SIGNAL_DEVICE_FIRST_START:
     case ESP_ZB_BDB_SIGNAL_DEVICE_REBOOT:
-        if (err_status == ESP_OK)
-        {
-            if (esp_zb_bdb_is_factory_new())
-            {
-                ESP_LOGI(TAG, "Start network steering");
-                esp_zb_bdb_start_top_level_commissioning(ESP_ZB_BDB_MODE_NETWORK_STEERING);
-            }
-            else
-            {
-                ESP_LOGI(TAG, "Device restarted");
-            }
-        }
-        else
-        {
-            ESP_LOGW(TAG, "Failed to initialize Zigbee stack (status: %s)", esp_err_to_name(err_status));
+        if (err_status == ESP_OK) {
+            ESP_LOGI(TAG, "Start network steering");
+            esp_zb_bdb_start_top_level_commissioning(ESP_ZB_BDB_MODE_NETWORK_STEERING);
+        } else {
+            /* commissioning failed */
+            ESP_LOGW(TAG, "Failed to initialize Zigbee stack (status: %d)", err_status);
         }
         break;
     case ESP_ZB_BDB_SIGNAL_STEERING:
