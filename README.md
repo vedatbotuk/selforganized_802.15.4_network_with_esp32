@@ -8,7 +8,7 @@ equipped with:
 
 ## Folder Structure
 - COORDINATOR
-  - Not working.
+  - can only create network. Temperature, Humidity and Power Cluster are not included.
 - FFD
   - router_only
   - router_sensor_device
