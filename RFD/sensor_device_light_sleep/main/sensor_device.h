@@ -1,15 +1,18 @@
-/*
- * SPDX-FileCopyrightText: 2021-2022 Espressif Systems (Shanghai) CO LTD
+/* 
+ * selforganized_802.15.4_network_with_esp32
+ * Copyright (c) 2024 Vedat Botuk.
+ * 
+ * This program is free software: you can redistribute it and/or modify  
+ * it under the terms of the GNU General Public License as published by  
+ * the Free Software Foundation, version 3.
  *
- * SPDX-License-Identifier: CC0-1.0
+ * This program is distributed in the hope that it will be useful, but 
+ * WITHOUT ANY WARRANTY; without even the implied warranty of 
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU 
+ * General Public License for more details.
  *
- * Zigbee HA_TEMPERATURE
- *
- * This example code is in the Public Domain (or CC0 licensed, at your option.)
- *
- * Unless required by applicable law or agreed to in writing, this
- * software is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR
- * CONDITIONS OF ANY KIND, either express or implied.
+ * You should have received a copy of the GNU General Public License 
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
 #include "esp_zigbee_core.h"
@@ -21,8 +24,8 @@
 #define ESP_OTA_CLIENT_ENDPOINT             5                                       /* OTA endpoint identifier */
 #define OTA_UPGRADE_MANUFACTURER            0x1001                                  /* The attribute indicates the file version of the downloaded image on the device*/
 #define OTA_UPGRADE_IMAGE_TYPE              0x1011                                  /* The attribute indicates the value for the manufacturer of the device */
-#define OTA_UPGRADE_RUNNING_FILE_VERSION    0x01010105                              /* The attribute indicates the file version of the running firmware image on the device */
-#define OTA_UPGRADE_DOWNLOADED_FILE_VERSION 0x01010105                              /* The attribute indicates the file version of the downloaded firmware image on the device */
+#define OTA_UPGRADE_RUNNING_FILE_VERSION    0x01010106                              /* The attribute indicates the file version of the running firmware image on the device */
+#define OTA_UPGRADE_DOWNLOADED_FILE_VERSION 0x01010106                              /* The attribute indicates the file version of the downloaded firmware image on the device */
 #define OTA_UPGRADE_HW_VERSION              0x0101                                  /* The parameter indicates the version of hardware */
 #define SENSOR_DEVICE_ENDPOINT              10    /* esp light bulb device endpoint, used to process light controlling commands */
 #define ESP_ZB_PRIMARY_CHANNEL_MASK         (1l << 25)  /* Zigbee primary channel mask use in the example */

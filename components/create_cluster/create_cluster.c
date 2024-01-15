@@ -1,3 +1,20 @@
+/* 
+ * selforganized_802.15.4_network_with_esp32
+ * Copyright (c) 2024 Vedat Botuk.
+ * 
+ * This program is free software: you can redistribute it and/or modify  
+ * it under the terms of the GNU General Public License as published by  
+ * the Free Software Foundation, version 3.
+ *
+ * This program is distributed in the hope that it will be useful, but 
+ * WITHOUT ANY WARRANTY; without even the implied warranty of 
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU 
+ * General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License 
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
+ */
+
 #include <stdio.h>
 #include "create_cluster.h"
 #include "esp_zigbee_core.h"
@@ -41,10 +58,11 @@ void create_identify_cluster(esp_zb_cluster_list_t *esp_zb_cluster_list)
 
 void create_temp_cluster(esp_zb_cluster_list_t *esp_zb_cluster_list)
 {
-    int16_t undefined_value = 0x8000;
-    /* Temperature cluster */
-    uint16_t temperature_max = 50000;
-    uint16_t temperature_min = -1000;
+    /* Default temperature value*/
+    int16_t undefined_value = 2300;
+    // TODO: Are following values correct?
+    uint16_t temperature_max = 5000;
+    uint16_t temperature_min = -5000;
     esp_zb_attribute_list_t *esp_zb_temperature_meas_cluster = esp_zb_zcl_attr_list_create(ESP_ZB_ZCL_CLUSTER_ID_TEMP_MEASUREMENT);
     esp_zb_temperature_meas_cluster_add_attr(esp_zb_temperature_meas_cluster, ESP_ZB_ZCL_ATTR_TEMP_MEASUREMENT_VALUE_ID, &undefined_value);
     esp_zb_temperature_meas_cluster_add_attr(esp_zb_temperature_meas_cluster, ESP_ZB_ZCL_ATTR_TEMP_MEASUREMENT_MIN_VALUE_ID, &temperature_min);
@@ -54,7 +72,6 @@ void create_temp_cluster(esp_zb_cluster_list_t *esp_zb_cluster_list)
 
 void create_hum_cluster(esp_zb_cluster_list_t *esp_zb_cluster_list)
 {
-    /* Humidity cluster */
     uint16_t undefined_value;
     uint32_t humidity_max = 100000;
     uint16_t humidity_min = 0;
@@ -68,7 +85,6 @@ void create_hum_cluster(esp_zb_cluster_list_t *esp_zb_cluster_list)
 void create_battery_cluster(esp_zb_cluster_list_t *esp_zb_cluster_list)
 {
     // TODO: add power_cluster for battery
-    /* POWER_CONFIG cluster */
     esp_zb_power_config_cluster_cfg_t power_cfg = {0};
     uint8_t batteryRatedVoltage = 90;
     uint8_t batteryMinVoltage = 70;
