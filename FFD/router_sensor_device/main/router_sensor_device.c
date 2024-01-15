@@ -1,16 +1,20 @@
-/*
- * SPDX-FileCopyrightText: 2021-2022 Espressif Systems (Shanghai) CO LTD
+/* 
+ * selforganized_802.15.4_network_with_esp32
+ * Copyright (c) 2024 Vedat Botuk.
+ * 
+ * This program is free software: you can redistribute it and/or modify  
+ * it under the terms of the GNU General Public License as published by  
+ * the Free Software Foundation, version 3.
  *
- * SPDX-License-Identifier: CC0-1.0
+ * This program is distributed in the hope that it will be useful, but 
+ * WITHOUT ANY WARRANTY; without even the implied warranty of 
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU 
+ * General Public License for more details.
  *
- * Zigbee HA_TEMPERATURE
- *
- * This example code is in the Public Domain (or CC0 licensed, at your option.)
- *
- * Unless required by applicable law or agreed to in writing, this
- * software is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR
- * CONDITIONS OF ANY KIND, either express or implied.
+ * You should have received a copy of the GNU General Public License 
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
+ 
 #include "router_sensor_device.h"
 #include "esp_check.h"
 #include "esp_log.h"
