@@ -37,7 +37,7 @@
 
 #define SENSOR_TYPE DHT_TYPE_AM2301
 
-static char firmware_version[16] = {7, 'v', 'e', 'r', '0', '.', '1', '1'};
+static char firmware_version[16] = {7, 'v', 'e', 'r', '0', '.', '1', '3'};
 static const char *TAG = "SENSOR_DEVICE";
 bool connected = false;
 
@@ -48,7 +48,7 @@ static void bdb_start_top_level_commissioning_cb(uint8_t mode_mask)
     ESP_ERROR_CHECK(esp_zb_bdb_start_top_level_commissioning(mode_mask));
 }
 
-void measure_temperature()
+static void measure_temperature()
 {
     float temperature;
     int16_t temperature_to_send = 0;
@@ -57,12 +57,9 @@ void measure_temperature()
     uint16_t humidity_to_send = 0;
 
     /* Measure temperature loop*/
-    while (1)
-    {
-        if (connected)
-        {
-            if (dht_read_float_data(SENSOR_TYPE, CONFIG_EXAMPLE_DATA_GPIO, &humidity, &temperature) == ESP_OK)
-            {
+    while (1) {
+        if (connected == true) {
+            if (dht_read_float_data(SENSOR_TYPE, CONFIG_EXAMPLE_DATA_GPIO, &humidity, &temperature) == ESP_OK) {
                 ESP_LOGI(TAG, "Temperature : %.1f ℃", temperature);
                 ESP_LOGI(TAG, "Humidity : %.1f %%", humidity);
 
@@ -74,44 +71,48 @@ void measure_temperature()
                 ESP_LOGI(TAG, "Humidity changes, will write new value");
                 zb_update_hum(humidity_to_send, SENSOR_DEVICE_ENDPOINT);
             }
-            else
-            {
+            else {
                 ESP_LOGW(TAG, "Could not read data from DHT22 Sensor.");
             }
         }
-        else
-        {
-            ESP_LOGI(TAG, "Device is not connected!");
+        else {
+            ESP_LOGW(TAG, "Device is not connected!");
         }
-        vTaskDelay(pdMS_TO_TICKS(60000));
+
+        vTaskDelay(pdMS_TO_TICKS(300000));
     }
 }
 
 void esp_zb_app_signal_handler(esp_zb_app_signal_t *signal_struct)
 {
-    uint32_t *p_sg_p = signal_struct->p_app_signal;
+    uint32_t *p_sg_p       = signal_struct->p_app_signal;
     esp_err_t err_status = signal_struct->esp_err_status;
     esp_zb_app_signal_type_t sig_type = *p_sg_p;
-    esp_zb_zdo_signal_leave_params_t *leave_params = NULL;
-    switch (sig_type)
-    {
+    switch (sig_type) {
     case ESP_ZB_ZDO_SIGNAL_SKIP_STARTUP:
+        connected = false;
         ESP_LOGI(TAG, "Zigbee stack initialized");
         esp_zb_bdb_start_top_level_commissioning(ESP_ZB_BDB_MODE_INITIALIZATION);
         break;
     case ESP_ZB_BDB_SIGNAL_DEVICE_FIRST_START:
     case ESP_ZB_BDB_SIGNAL_DEVICE_REBOOT:
         if (err_status == ESP_OK) {
-            ESP_LOGI(TAG, "Start network steering");
-            esp_zb_bdb_start_top_level_commissioning(ESP_ZB_BDB_MODE_NETWORK_STEERING);
+            ESP_LOGI(TAG, "Device started up in %s factory-reset mode", esp_zb_bdb_is_factory_new() ? "" : "non");
+            if (esp_zb_bdb_is_factory_new()) {
+                ESP_LOGI(TAG, "Start network steering");
+                esp_zb_bdb_start_top_level_commissioning(ESP_ZB_BDB_MODE_NETWORK_STEERING);
+            } else {
+                connected = true;
+                ESP_LOGI(TAG, "Device rebooted");
+            }
         } else {
             /* commissioning failed */
+            connected = false;
             ESP_LOGW(TAG, "Failed to initialize Zigbee stack (status: %d)", err_status);
         }
         break;
     case ESP_ZB_BDB_SIGNAL_STEERING:
-        if (err_status == ESP_OK)
-        {
+        if (err_status == ESP_OK) {
             connected = true;
             esp_zb_ieee_addr_t extended_pan_id;
             esp_zb_get_extended_pan_id(extended_pan_id);
@@ -119,20 +120,10 @@ void esp_zb_app_signal_handler(esp_zb_app_signal_t *signal_struct)
                      extended_pan_id[7], extended_pan_id[6], extended_pan_id[5], extended_pan_id[4],
                      extended_pan_id[3], extended_pan_id[2], extended_pan_id[1], extended_pan_id[0],
                      esp_zb_get_pan_id(), esp_zb_get_current_channel(), esp_zb_get_short_address());
-        }
-        else
-        {
+        } else {
             connected = false;
             ESP_LOGI(TAG, "Network steering was not successful (status: %d)", err_status);
             esp_zb_scheduler_alarm((esp_zb_callback_t)bdb_start_top_level_commissioning_cb, ESP_ZB_BDB_MODE_NETWORK_STEERING, 1000);
-        }
-        break;
-    case ESP_ZB_ZDO_SIGNAL_LEAVE:
-        leave_params = (esp_zb_zdo_signal_leave_params_t *)esp_zb_app_signal_get_params(p_sg_p);
-        if (leave_params->leave_type == ESP_ZB_NWK_LEAVE_TYPE_RESET)
-        {
-            ESP_LOGI(TAG, "Reset device");
-            esp_zb_factory_reset();
         }
         break;
     case ESP_ZB_COMMON_SIGNAL_CAN_SLEEP:

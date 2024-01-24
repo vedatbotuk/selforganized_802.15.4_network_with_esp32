@@ -59,7 +59,7 @@ void create_identify_cluster(esp_zb_cluster_list_t *esp_zb_cluster_list)
 void create_temp_cluster(esp_zb_cluster_list_t *esp_zb_cluster_list)
 {
     /* Default temperature value*/
-    int16_t undefined_value = 2300;
+    int16_t undefined_value;
     // TODO: Are following values correct?
     uint16_t temperature_max = 5000;
     uint16_t temperature_min = -5000;
