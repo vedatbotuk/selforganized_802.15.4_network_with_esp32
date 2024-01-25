@@ -15,3 +15,8 @@ equipped with:
 - RFD
   - sensor_device_light_sleep
   - sensor_devoce_deepsleep
+
+# Install following libs in /components
+
+- esp-zboss-lib
+- esp-zigbee-lib
