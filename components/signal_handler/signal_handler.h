@@ -18,19 +18,17 @@
 #ifndef SIGNAL_HANDLER_H
 #define SIGNAL_HANDLER_H
 
-#include "esp_log.h"
-#include "esp_check.h"
-#include "esp_zigbee_core.h"
-
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-extern bool connected;
+extern bool conn;
 extern const char *TAG_SIGNAL_HANDLER;
 
 void bdb_start_top_level_commissioning_cb(uint8_t mode_mask);
-void create_signal_handler(esp_zb_app_signal_t signal_struct);
+bool connection_status();
+void create_signal_handler_light_sleep(esp_zb_app_signal_t signal_struct);
+void create_signal_handler_deep_sleep(esp_zb_app_signal_t signal_struct);
 
 #ifdef __cplusplus
 }

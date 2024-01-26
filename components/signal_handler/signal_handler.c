@@ -15,28 +15,28 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
- 
-#include "esp_timer.h"
-#include "esp_log.h"
-#include "esp_check.h"
 #include "esp_zigbee_core.h"
 
 const char *TAG_SIGNAL_HANDLER = "SIGNAL";
-bool connected = false;
+bool conn = false;
 
 void bdb_start_top_level_commissioning_cb(uint8_t mode_mask)
 {
     ESP_ERROR_CHECK(esp_zb_bdb_start_top_level_commissioning(mode_mask));
 }
 
-void create_signal_handler(esp_zb_app_signal_t *signal_struct)
+bool connection_status() {
+    return conn;
+}
+
+void create_signal_handler_light_sleep(esp_zb_app_signal_t signal_struct)
 {
-    uint32_t *p_sg_p = signal_struct->p_app_signal;
-    esp_err_t err_status = signal_struct->esp_err_status;
+    uint32_t *p_sg_p = signal_struct.p_app_signal;
+    esp_err_t err_status = signal_struct.esp_err_status;
     esp_zb_app_signal_type_t sig_type = *p_sg_p;
     switch (sig_type) {
     case ESP_ZB_ZDO_SIGNAL_SKIP_STARTUP:
-        connected = false;
+        conn = false;
         ESP_LOGI(TAG_SIGNAL_HANDLER, "Zigbee stack initialized");
         esp_zb_bdb_start_top_level_commissioning(ESP_ZB_BDB_MODE_INITIALIZATION);
         break;
@@ -48,18 +48,18 @@ void create_signal_handler(esp_zb_app_signal_t *signal_struct)
                 ESP_LOGI(TAG_SIGNAL_HANDLER, "Start network steering");
                 esp_zb_bdb_start_top_level_commissioning(ESP_ZB_BDB_MODE_NETWORK_STEERING);
             } else {
-                connected = true;
+                conn = true;
                 ESP_LOGI(TAG_SIGNAL_HANDLER, "Device rebooted");
             }
         } else {
             /* commissioning failed */
-            connected = false;
+            conn = false;
             ESP_LOGW(TAG_SIGNAL_HANDLER, "Failed to initialize Zigbee stack (status: %d)", err_status);
         }
         break;
     case ESP_ZB_BDB_SIGNAL_STEERING:
         if (err_status == ESP_OK) {
-            connected = true;
+            conn = true;
             esp_zb_ieee_addr_t extended_pan_id;
             esp_zb_get_extended_pan_id(extended_pan_id);
             ESP_LOGI(TAG_SIGNAL_HANDLER, "Joined network successfully (Extended PAN ID: %02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x, PAN ID: 0x%04hx, Channel:%d, Short Address: 0x%04hx)",
@@ -67,7 +67,7 @@ void create_signal_handler(esp_zb_app_signal_t *signal_struct)
                      extended_pan_id[3], extended_pan_id[2], extended_pan_id[1], extended_pan_id[0],
                      esp_zb_get_pan_id(), esp_zb_get_current_channel(), esp_zb_get_short_address());
         } else {
-            connected = false;
+            conn = false;
             ESP_LOGI(TAG_SIGNAL_HANDLER, "Network steering was not successful (status: %d)", err_status);
             esp_zb_scheduler_alarm((esp_zb_callback_t)bdb_start_top_level_commissioning_cb, ESP_ZB_BDB_MODE_NETWORK_STEERING, 1000);
         }
@@ -81,3 +81,7 @@ void create_signal_handler(esp_zb_app_signal_t *signal_struct)
         break;
     }
 }
+
+// TODO
+//void create_signal_handler_deep_sleep(esp_zb_app_signal_t signal_struct){
+//}

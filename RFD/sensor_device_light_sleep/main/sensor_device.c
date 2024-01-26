@@ -40,47 +40,37 @@
 
 static char firmware_version[16] = {7, 'v', 'e', 'r', '0', '.', '1', '3'};
 static const char *TAG = "SENSOR_DEVICE";
-bool connected1 = false;
 
 
 /********************* Define functions **************************/
 static void measure_temperature()
 {
     float temperature;
-    int16_t temperature_to_send = 0;
-
     float humidity;
-    uint16_t humidity_to_send = 0;
-
+    
     /* Measure temperature loop*/
     while (1) {
-        if (connected1 == true) {
+        if (connection_status() == true) {
             if (dht_read_float_data(SENSOR_TYPE, CONFIG_EXAMPLE_DATA_GPIO, &humidity, &temperature) == ESP_OK) {
                 ESP_LOGI(TAG, "Temperature : %.1f ℃", temperature);
                 ESP_LOGI(TAG, "Humidity : %.1f %%", humidity);
 
-                temperature_to_send = (int16_t)(temperature * 100);
-                humidity_to_send = (uint16_t)(humidity * 100);
-
                 ESP_LOGI(TAG, "Temperature changes, will write new value");
-                zb_update_temp(temperature_to_send, SENSOR_DEVICE_ENDPOINT);
+                zb_update_temp((int16_t)(temperature * 100), SENSOR_DEVICE_ENDPOINT);
                 ESP_LOGI(TAG, "Humidity changes, will write new value");
-                zb_update_hum(humidity_to_send, SENSOR_DEVICE_ENDPOINT);
-            }
-            else {
+                zb_update_hum((uint16_t)(humidity * 100), SENSOR_DEVICE_ENDPOINT);
+            } else {
                 ESP_LOGW(TAG, "Could not read data from DHT22 Sensor.");
             }
-        }
-        else {
+        } else {
             ESP_LOGW(TAG, "Device is not connected!");
         }
-
         vTaskDelay(pdMS_TO_TICKS(300000));
     }
 }
 
 void esp_zb_app_signal_handler(esp_zb_app_signal_t *signal_struct){
-    create_signal_handler(*signal_struct);
+    create_signal_handler_light_sleep(*signal_struct);
 }
 
 static esp_err_t zb_action_handler(esp_zb_core_action_callback_id_t callback_id, const void *message)
@@ -143,6 +133,6 @@ void app_main(void)
     ESP_ERROR_CHECK(nvs_flash_init());
     ESP_ERROR_CHECK(esp_zb_platform_config(&config));
     ESP_ERROR_CHECK(esp_zb_power_save_init(CONFIG_ESP_DEFAULT_CPU_FREQ_MHZ));
-    xTaskCreate(measure_temperature, "measure_temperature", configMINIMAL_STACK_SIZE * 3, NULL, 5, NULL);
-    xTaskCreate(esp_zb_task, "Zigbee_main", 4096, NULL, 6, NULL);
+    xTaskCreate(esp_zb_task, "Zigbee_main", 4096, NULL, 5, NULL);
+    xTaskCreate(measure_temperature, "measure_temperature", configMINIMAL_STACK_SIZE * 3, NULL, 6, NULL);    
 }
