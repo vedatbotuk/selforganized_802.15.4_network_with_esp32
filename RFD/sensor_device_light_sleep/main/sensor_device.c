@@ -40,7 +40,7 @@
 
 static char firmware_version[16] = {7, 'v', 'e', 'r', '0', '.', '1', '3'};
 static const char *TAG = "SENSOR_DEVICE";
-bool connected = false;
+bool connected1 = false;
 
 
 /********************* Define functions **************************/
@@ -54,7 +54,7 @@ static void measure_temperature()
 
     /* Measure temperature loop*/
     while (1) {
-        if (connected == true) {
+        if (connected1 == true) {
             if (dht_read_float_data(SENSOR_TYPE, CONFIG_EXAMPLE_DATA_GPIO, &humidity, &temperature) == ESP_OK) {
                 ESP_LOGI(TAG, "Temperature : %.1f ℃", temperature);
                 ESP_LOGI(TAG, "Humidity : %.1f %%", humidity);
@@ -80,8 +80,7 @@ static void measure_temperature()
 }
 
 void esp_zb_app_signal_handler(esp_zb_app_signal_t *signal_struct){
-    create_signal_handler(*(esp_zb_app_signal_t *)signal_struct);
-    //zb_ota_upgrade_status_handler(*(esp_zb_zcl_ota_upgrade_value_message_t *)message);
+    create_signal_handler(*signal_struct);
 }
 
 static esp_err_t zb_action_handler(esp_zb_core_action_callback_id_t callback_id, const void *message)

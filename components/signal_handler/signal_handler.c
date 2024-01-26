@@ -29,9 +29,9 @@ void bdb_start_top_level_commissioning_cb(uint8_t mode_mask)
     ESP_ERROR_CHECK(esp_zb_bdb_start_top_level_commissioning(mode_mask));
 }
 
-void create_signal_handler(esp_zb_app_signal_t signal_struct)
+void create_signal_handler(esp_zb_app_signal_t *signal_struct)
 {
-    uint32_t *p_sg_p       = signal_struct->p_app_signal;
+    uint32_t *p_sg_p = signal_struct->p_app_signal;
     esp_err_t err_status = signal_struct->esp_err_status;
     esp_zb_app_signal_type_t sig_type = *p_sg_p;
     switch (sig_type) {
