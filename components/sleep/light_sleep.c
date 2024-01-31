@@ -39,5 +39,5 @@ void sleep_enable()
 
 void sleep_configure()
 {
-    esp_zb_sleep_set_threshold(20);
+    esp_zb_sleep_set_threshold(2000);
 }

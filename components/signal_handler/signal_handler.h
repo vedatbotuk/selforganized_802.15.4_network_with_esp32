@@ -24,11 +24,15 @@ extern "C" {
 
 extern bool conn;
 extern const char *TAG_SIGNAL_HANDLER;
+extern uint8_t deepsleep_cnt;
 
 void bdb_start_top_level_commissioning_cb(uint8_t mode_mask);
 bool connection_status();
 void create_signal_handler_light_sleep(esp_zb_app_signal_t signal_struct);
 void create_signal_handler_deep_sleep(esp_zb_app_signal_t signal_struct);
+void deep_sleep_check();
+void create_signal_handler_mix_sleep(esp_zb_app_signal_t signal_struct);
+
 
 #ifdef __cplusplus
 }
