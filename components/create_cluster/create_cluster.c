@@ -82,6 +82,14 @@ void create_hum_cluster(esp_zb_cluster_list_t *esp_zb_cluster_list)
     esp_zb_cluster_list_add_humidity_meas_cluster(esp_zb_cluster_list, esp_zb_hum_meas_cluster, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE);
 }
 
+void create_waterleak_cluster(esp_zb_cluster_list_t *esp_zb_cluster_list)
+{
+    uint16_t undefined_value;
+    esp_zb_attribute_list_t *esp_zb_metering_cluster = esp_zb_zcl_attr_list_create(ESP_ZB_ZCL_CLUSTER_ID_METERING);
+    esp_zb_on_off_cluster_add_attr(esp_zb_metering_cluster, ESP_ZB_ZCL_ATTR_METERING_WATER_SPECIFIC_ALARM_MASK_ID, &undefined_value);
+    esp_zb_cluster_list_add_metering_cluster(esp_zb_cluster_list, esp_zb_metering_cluster, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE);
+}
+
 void create_battery_cluster(esp_zb_cluster_list_t *esp_zb_cluster_list)
 {
     // TODO: add power_cluster for battery
