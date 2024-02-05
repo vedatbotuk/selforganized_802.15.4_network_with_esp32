@@ -55,6 +55,7 @@ static void esp_zb_buttons_handler(switch_func_pair_t *button_func_pair)
 {
     if (button_func_pair->func == SWITCH_ONOFF_TOGGLE_CONTROL) {
          ESP_EARLY_LOGI(TAG, "Send 'Water Leak' command");
+         zb_update_waterleak(1, SENSOR_DEVICE_ENDPOINT);
     }
 }
 

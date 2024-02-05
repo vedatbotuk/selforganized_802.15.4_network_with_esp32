@@ -83,10 +83,11 @@ void create_hum_cluster(esp_zb_cluster_list_t *esp_zb_cluster_list)
 }
 
 void create_waterleak_cluster(esp_zb_cluster_list_t *esp_zb_cluster_list)
+// TODO Alarm Cluster should implemented
 {
     uint16_t undefined_value;
     esp_zb_attribute_list_t *esp_zb_metering_cluster = esp_zb_zcl_attr_list_create(ESP_ZB_ZCL_CLUSTER_ID_METERING);
-    esp_zb_on_off_cluster_add_attr(esp_zb_metering_cluster, ESP_ZB_ZCL_ATTR_METERING_WATER_SPECIFIC_ALARM_MASK_ID, &undefined_value);
+    esp_zb_cluster_add_attr(esp_zb_metering_cluster, ESP_ZB_ZCL_CLUSTER_ID_METERING, ESP_ZB_ZCL_ATTR_METERING_WATER_SPECIFIC_ALARM_MASK_ID, ESP_ZB_ZCL_ATTR_TYPE_NULL, ESP_ZB_ZCL_ATTR_ACCESS_READ_WRITE, &undefined_value);
     esp_zb_cluster_list_add_metering_cluster(esp_zb_cluster_list, esp_zb_metering_cluster, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE);
 }
 

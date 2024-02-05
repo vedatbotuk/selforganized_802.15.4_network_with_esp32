@@ -20,40 +20,41 @@
 #include "zcl/esp_zigbee_zcl_power_config.h"
 #include "esp_log.h"
 
-static const char *TAG = "UPDATE_TEMP_CLUSTER";
+static const char *TAG = "UPDATE_WATERLEAK_CLUSTER";
 
-void zb_update_temp(int16_t temperature, uint8_t endpoint)
+void zb_update_waterleak(uint8_t leak, uint8_t endpoint)
 {
 
-    esp_zb_zcl_status_t state = esp_zb_zcl_set_attribute_val(endpoint, ESP_ZB_ZCL_CLUSTER_ID_TEMP_MEASUREMENT, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_TEMP_MEASUREMENT_VALUE_ID, &temperature, false);
+    esp_zb_zcl_status_t state = esp_zb_zcl_set_attribute_val(endpoint, ESP_ZB_ZCL_CLUSTER_ID_METERING, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_METERING_WATER_SPECIFIC_ALARM_MASK_ID, &leak, false);
     
     /* Check for error */
     if (state != ESP_ZB_ZCL_STATUS_SUCCESS)
     {
-        ESP_LOGE(TAG, "Setting temp attribute failed!");
+        ESP_LOGE(TAG, "Setting waterleak attribute failed!");
         return;
     }
 
-    ESP_LOGI(TAG, "Setting temp attribute success");
+    ESP_LOGI(TAG, "Setting waterleak attribute success");
     return;
 }
 
-void zb_report_temp(int16_t temperature, uint8_t endpoint)
+void zb_report_waterleak(uint8_t endpoint)
 {
-    static esp_zb_zcl_report_attr_cmd_t temp_measurement_cmd_req = {};
-    temp_measurement_cmd_req.zcl_basic_cmd.src_endpoint = endpoint;
-    temp_measurement_cmd_req.address_mode = ESP_ZB_APS_ADDR_MODE_DST_ADDR_ENDP_NOT_PRESENT;
-    temp_measurement_cmd_req.clusterID = ESP_ZB_ZCL_CLUSTER_ID_TEMP_MEASUREMENT;
-    temp_measurement_cmd_req.cluster_role = ESP_ZB_ZCL_CLUSTER_SERVER_ROLE;
+    static esp_zb_zcl_report_attr_cmd_t waterleak_cmd_req = {};
+    waterleak_cmd_req.zcl_basic_cmd.src_endpoint = endpoint;
+    waterleak_cmd_req.address_mode = ESP_ZB_APS_ADDR_MODE_DST_ADDR_ENDP_NOT_PRESENT;
+    waterleak_cmd_req.clusterID = ESP_ZB_ZCL_CLUSTER_ID_METERING;
+    waterleak_cmd_req.cluster_role = ESP_ZB_ZCL_CLUSTER_SERVER_ROLE;
+    waterleak_cmd_req.attributeID = ESP_ZB_ZCL_ATTR_METERING_WATER_SPECIFIC_ALARM_MASK_ID;
 
     /* Request sending new phase voltage */
-    esp_err_t state = esp_zb_zcl_report_attr_cmd_req(&temp_measurement_cmd_req);
+    esp_err_t state = esp_zb_zcl_report_attr_cmd_req(&waterleak_cmd_req);
     /* Check for error */
     if(state != ESP_ZB_ZCL_STATUS_SUCCESS) {
-        ESP_LOGE(TAG, "Report temp attribute report command failed!");
+        ESP_LOGE(TAG, "Report waterleak attribute report command failed!");
         return;
     }
 
-    ESP_LOGI(TAG, "Report temp attribute success");
+    ESP_LOGI(TAG, "Report waterleak attribute success");
     return;
 }
