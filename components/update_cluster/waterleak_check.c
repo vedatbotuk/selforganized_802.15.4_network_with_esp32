@@ -22,39 +22,44 @@
 
 static const char *TAG = "UPDATE_WATERLEAK_CLUSTER";
 
-void zb_update_waterleak(uint8_t leak, uint8_t endpoint)
+void zb_update_waterleak(uint8_t endpoint)
 {
-
-    esp_zb_zcl_status_t state = esp_zb_zcl_set_attribute_val(endpoint, ESP_ZB_ZCL_CLUSTER_ID_METERING, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_METERING_WATER_SPECIFIC_ALARM_MASK_ID, &leak, false);
+//    uint8_t leak = ESP_ZB_ZCL_METERING_ALARM_LEAK_DETECT;
+    uint8_t leak = 0;
     
+//    esp_zb_zcl_status_t state = esp_zb_zcl_set_attribute_val(endpoint, ESP_ZB_ZCL_CLUSTER_ID_METERING, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_METERING_STATUS_ID, &leak, false);
+    esp_zb_zcl_status_t state = esp_zb_zcl_set_attribute_val(endpoint, ESP_ZB_ZCL_CLUSTER_ID_IAS_ZONE, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_IAS_ZONE_ZONESTATUS_ID, &leak, false);
+
+
     /* Check for error */
     if (state != ESP_ZB_ZCL_STATUS_SUCCESS)
     {
-        ESP_LOGE(TAG, "Setting waterleak attribute failed!");
+        ESP_EARLY_LOGI(TAG, "Setting waterleak attribute failed with %x", state);
         return;
     }
 
-    ESP_LOGI(TAG, "Setting waterleak attribute success");
+    ESP_EARLY_LOGI(TAG, "Setting waterleak attribute success");
     return;
 }
 
+
 void zb_report_waterleak(uint8_t endpoint)
 {
-    static esp_zb_zcl_report_attr_cmd_t waterleak_cmd_req = {};
-    waterleak_cmd_req.zcl_basic_cmd.src_endpoint = endpoint;
-    waterleak_cmd_req.address_mode = ESP_ZB_APS_ADDR_MODE_DST_ADDR_ENDP_NOT_PRESENT;
-    waterleak_cmd_req.clusterID = ESP_ZB_ZCL_CLUSTER_ID_METERING;
-    waterleak_cmd_req.cluster_role = ESP_ZB_ZCL_CLUSTER_SERVER_ROLE;
-    waterleak_cmd_req.attributeID = ESP_ZB_ZCL_ATTR_METERING_WATER_SPECIFIC_ALARM_MASK_ID;
+    static esp_zb_zcl_ias_zone_status_change_notif_cmd_t waterleak_chg_not_cmd = {};
+    waterleak_chg_not_cmd.zcl_basic_cmd.src_endpoint = endpoint;
+    waterleak_chg_not_cmd.address_mode = ESP_ZB_APS_ADDR_MODE_DST_ADDR_ENDP_NOT_PRESENT;
+    waterleak_chg_not_cmd.zone_status = ESP_ZB_ZCL_IAS_ZONE_ZONESTATE_ENROLLED;
+    waterleak_chg_not_cmd.zone_id = ESP_ZB_ZCL_CMD_IAS_ZONE_ZONE_STATUS_CHANGE_NOT_ID;
+    waterleak_chg_not_cmd.delay = 100;
 
     /* Request sending new phase voltage */
-    esp_err_t state = esp_zb_zcl_report_attr_cmd_req(&waterleak_cmd_req);
+    esp_err_t state = esp_zb_zcl_ias_zone_status_change_notif_cmd_req(&waterleak_chg_not_cmd);
     /* Check for error */
     if(state != ESP_ZB_ZCL_STATUS_SUCCESS) {
-        ESP_LOGE(TAG, "Report waterleak attribute report command failed!");
+        ESP_EARLY_LOGI(TAG, "Report waterleak attribute report command failed!");
         return;
     }
 
-    ESP_LOGI(TAG, "Report waterleak attribute success");
+    ESP_EARLY_LOGI(TAG, "Report waterleak attribute success");
     return;
 }

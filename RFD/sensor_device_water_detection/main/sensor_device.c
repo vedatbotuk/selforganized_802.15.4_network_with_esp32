@@ -27,6 +27,7 @@
 #include "signal_handler.h"
 #include "driver/gpio.h"
 #include "switch_driver.h"
+#include "driver/gpio.h"
 
 #if !defined ZB_ED_ROLE
 #error Define ZB_ED_ROLE in idf.py menuconfig to compile RFD (End Device) source code.
@@ -42,30 +43,35 @@
 
 static char firmware_version[16] = {7, 'v', 'e', 'r', '0', '.', '1', '3'};
 static const char *TAG = "SENSOR_DEVICE";
+bool connected = false;
+bool water_detected = false;
 
-
-#define PUSH_BUTTON_PIN GPIO_NUM_9
+#define INPUT_PIN GPIO_NUM_22
 
 static switch_func_pair_t button_func_pair[] = {
-    {PUSH_BUTTON_PIN, SWITCH_ONOFF_TOGGLE_CONTROL}
+    {INPUT_PIN, SWITCH_ON_CONTROL}
 };
-
 
 static void esp_zb_buttons_handler(switch_func_pair_t *button_func_pair)
 {
-    if (button_func_pair->func == SWITCH_ONOFF_TOGGLE_CONTROL) {
-         ESP_EARLY_LOGI(TAG, "Send 'Water Leak' command");
-         zb_update_waterleak(1, SENSOR_DEVICE_ENDPOINT);
-    }
+    if (button_func_pair->func == SWITCH_ON_CONTROL) {
+        if (water_detected != true) {
+            zb_update_waterleak(SENSOR_DEVICE_ENDPOINT);
+            zb_report_waterleak(SENSOR_DEVICE_ENDPOINT);
+            water_detected = true;
+        }     
+    } 
 }
 
 /********************* Define functions **************************/
+
+
 void esp_zb_app_signal_handler(esp_zb_app_signal_t *signal_struct){
     create_signal_handler_normal(*signal_struct);
 }
 
 static esp_err_t zb_action_handler(esp_zb_core_action_callback_id_t callback_id, const void *message)
-{
+{  
     esp_err_t ret = ESP_OK;
     switch (callback_id)
     {
@@ -106,7 +112,8 @@ static void esp_zb_task(void *pvParameters)
     esp_zb_ep_list_t *esp_zb_ep_list = esp_zb_ep_list_create();
     esp_zb_ep_list_add_ep(esp_zb_ep_list, esp_zb_cluster_list, SENSOR_DEVICE_ENDPOINT, ESP_ZB_AF_HA_PROFILE_ID, ESP_ZB_HA_TEMPERATURE_SENSOR_DEVICE_ID);
 
-    esp_zb_device_register(esp_zb_ep_list);
+    esp_zb_device_register(esp_zb_ep_list); 
+       
     esp_zb_core_action_handler_register(zb_action_handler);
     esp_zb_set_primary_network_channel_set(ESP_ZB_PRIMARY_CHANNEL_MASK);
     ESP_ERROR_CHECK(esp_zb_start(false));
@@ -121,10 +128,13 @@ void app_main(void)
     };
     
     switch_driver_init(button_func_pair, PAIR_SIZE(button_func_pair), esp_zb_buttons_handler);
+//    gpio_set_direction(INPUT_PIN, GPIO_MODE_INPUT);
+//    gpio_set_pull_mode(INPUT_PIN, GPIO_PULLUP_ONLY);
 
     ESP_ERROR_CHECK(nvs_flash_init());
     ESP_ERROR_CHECK(esp_zb_platform_config(&config));
 //    ESP_ERROR_CHECK(esp_zb_power_save_init(CONFIG_ESP_DEFAULT_CPU_FREQ_MHZ));
 //    zb_deep_sleep_init();
+//    xTaskCreate(check_water_leak, "check_water_leak", configMINIMAL_STACK_SIZE * 3, NULL, 5, NULL);
     xTaskCreate(esp_zb_task, "Zigbee_main", 4096, NULL, 5, NULL);
 }
