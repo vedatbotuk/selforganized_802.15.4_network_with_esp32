@@ -20,10 +20,9 @@
 #include "esp_check.h"
 #include "esp_log.h"
 #include "ota.c"
-//#include "deep_sleep.h"
 #include "update_cluster.h"
 #include "create_cluster.h"
-//#include "light_sleep.h"
+#include "light_sleep.h"
 #include "signal_handler.h"
 #include "driver/gpio.h"
 #include "switch_driver.h"
@@ -48,26 +47,47 @@ bool water_detected = false;
 
 #define INPUT_PIN GPIO_NUM_22
 
-static switch_func_pair_t button_func_pair[] = {
-    {INPUT_PIN, SWITCH_ON_CONTROL}
-};
-
-static void esp_zb_buttons_handler(switch_func_pair_t *button_func_pair)
-{
-    if (button_func_pair->func == SWITCH_ON_CONTROL) {
-        if (water_detected != true) {
-            zb_update_waterleak(SENSOR_DEVICE_ENDPOINT);
-            zb_report_waterleak(SENSOR_DEVICE_ENDPOINT);
-            water_detected = true;
-        }     
-    } 
-}
-
 /********************* Define functions **************************/
+
+static void check_water_leak()
+{
+    bool water_detected = false;
+    /* because of cnt will be resend command again.*/
+    uint8_t cnt = 0;
+    
+    while(1) {
+        if (connection_status() == true) {
+            if (gpio_get_level(INPUT_PIN) == 0 && water_detected == false) {
+                ESP_LOGI(TAG, "Water detected");
+                zb_update_waterleak(SENSOR_DEVICE_ENDPOINT, 1);
+                zb_report_waterleak(SENSOR_DEVICE_ENDPOINT, 1);
+                water_detected = true;
+                cnt = 0;
+            }
+            
+            if (gpio_get_level(INPUT_PIN) == 1 && water_detected == true) {
+                ESP_LOGI(TAG, "Water alarm released");
+                zb_update_waterleak(SENSOR_DEVICE_ENDPOINT, 0);
+                zb_report_waterleak(SENSOR_DEVICE_ENDPOINT, 0);
+                water_detected = false;
+            }
+            
+            if (cnt == 30) {
+                if (water_detected == true) {water_detected = false;} else {water_detected = true;}
+                cnt = 0;
+                }
+            cnt++;
+            
+        } else {
+            ESP_LOGI(TAG, "Device is not connected!");
+        }
+        vTaskDelay(pdMS_TO_TICKS(2000));
+    }
+}
 
 
 void esp_zb_app_signal_handler(esp_zb_app_signal_t *signal_struct){
-    create_signal_handler_normal(*signal_struct);
+    create_signal_handler_light_sleep(*signal_struct);
 }
 
 static esp_err_t zb_action_handler(esp_zb_core_action_callback_id_t callback_id, const void *message)
@@ -90,9 +110,9 @@ static void esp_zb_task(void *pvParameters)
     /* initialize Zigbee stack */
     esp_zb_cfg_t zb_nwk_cfg = ESP_ZB_ZED_CONFIG();
     /* The order in the following 3 lines must not be changed. */
-//    sleep_enable();
+    sleep_enable();
     esp_zb_init(&zb_nwk_cfg);
-//    sleep_configure();
+    sleep_configure();
     esp_zb_set_tx_power(TX_POWER);
 
     /* create cluster lists for this endpoint */
@@ -127,14 +147,12 @@ void app_main(void)
         .host_config = ESP_ZB_DEFAULT_HOST_CONFIG(),
     };
     
-    switch_driver_init(button_func_pair, PAIR_SIZE(button_func_pair), esp_zb_buttons_handler);
-//    gpio_set_direction(INPUT_PIN, GPIO_MODE_INPUT);
-//    gpio_set_pull_mode(INPUT_PIN, GPIO_PULLUP_ONLY);
+    gpio_set_direction(INPUT_PIN, GPIO_MODE_INPUT);
+    gpio_set_pull_mode(INPUT_PIN, GPIO_PULLUP_ONLY);
 
     ESP_ERROR_CHECK(nvs_flash_init());
     ESP_ERROR_CHECK(esp_zb_platform_config(&config));
-//    ESP_ERROR_CHECK(esp_zb_power_save_init(CONFIG_ESP_DEFAULT_CPU_FREQ_MHZ));
-//    zb_deep_sleep_init();
-//    xTaskCreate(check_water_leak, "check_water_leak", configMINIMAL_STACK_SIZE * 3, NULL, 5, NULL);
+    ESP_ERROR_CHECK(esp_zb_power_save_init(CONFIG_ESP_DEFAULT_CPU_FREQ_MHZ));
+    xTaskCreate(check_water_leak, "check_water_leak", configMINIMAL_STACK_SIZE * 3, NULL, 5, NULL);
     xTaskCreate(esp_zb_task, "Zigbee_main", 4096, NULL, 5, NULL);
 }
