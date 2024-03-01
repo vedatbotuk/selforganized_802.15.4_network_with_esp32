@@ -25,7 +25,6 @@
 #include "light_sleep.h"
 #include "signal_handler.h"
 #include "driver/gpio.h"
-#include "switch_driver.h"
 #include "driver/gpio.h"
 
 #if !defined ZB_ED_ROLE
@@ -70,9 +69,11 @@ static void check_water_leak()
                 zb_update_waterleak(SENSOR_DEVICE_ENDPOINT, 0);
                 zb_report_waterleak(SENSOR_DEVICE_ENDPOINT, 0);
                 water_detected = false;
+                cnt = 0;
             }
             
-            if (cnt == 30) {
+            /* Every 5 Minutes*/
+            if (cnt >= 30) {
                 if (water_detected == true) {water_detected = false;} else {water_detected = true;}
                 cnt = 0;
                 }
@@ -81,13 +82,13 @@ static void check_water_leak()
         } else {
             ESP_LOGI(TAG, "Device is not connected!");
         }
-        vTaskDelay(pdMS_TO_TICKS(2000));
+        vTaskDelay(pdMS_TO_TICKS(10000));
     }
 }
 
 
 void esp_zb_app_signal_handler(esp_zb_app_signal_t *signal_struct){
-    create_signal_handler_light_sleep(*signal_struct);
+    create_signal_handler_normal(*signal_struct);
 }
 
 static esp_err_t zb_action_handler(esp_zb_core_action_callback_id_t callback_id, const void *message)
