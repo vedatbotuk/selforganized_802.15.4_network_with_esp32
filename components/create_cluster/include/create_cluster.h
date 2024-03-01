@@ -32,6 +32,7 @@ extern "C"
     void create_identify_cluster(esp_zb_cluster_list_t *esp_zb_cluster_list);
     void create_temp_cluster(esp_zb_cluster_list_t *esp_zb_cluster_list);
     void create_hum_cluster(esp_zb_cluster_list_t *esp_zb_cluster_list);
+    void create_waterleak_cluster(esp_zb_cluster_list_t *esp_zb_cluster_list);
     void create_battery_cluster(esp_zb_cluster_list_t *esp_zb_cluster_list);
     void create_ota_cluster(esp_zb_cluster_list_t *esp_zb_cluster_list,
                             uint32_t RUNNING_FILE_VERSION,

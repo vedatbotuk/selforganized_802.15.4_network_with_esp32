@@ -39,7 +39,7 @@ void zb_update_hum(int humidity, uint8_t endpoint)
 }
 
 
-void zb_report_hum(int humidity, uint8_t endpoint)
+void zb_report_hum(uint8_t endpoint)
 {
     static esp_zb_zcl_report_attr_cmd_t humidity_measurement_cmd_req = {};
     humidity_measurement_cmd_req.zcl_basic_cmd.src_endpoint = endpoint;
@@ -47,6 +47,7 @@ void zb_report_hum(int humidity, uint8_t endpoint)
     humidity_measurement_cmd_req.clusterID = ESP_ZB_ZCL_CLUSTER_ID_REL_HUMIDITY_MEASUREMENT;
     humidity_measurement_cmd_req.attributeID = ESP_ZB_ZCL_ATTR_REL_HUMIDITY_MEASUREMENT_VALUE_ID;
     humidity_measurement_cmd_req.cluster_role = ESP_ZB_ZCL_CLUSTER_SERVER_ROLE;
+    humidity_measurement_cmd_req.attributeID = ESP_ZB_ZCL_ATTR_REL_HUMIDITY_MEASUREMENT_VALUE_ID;
 
 
     esp_err_t state = esp_zb_zcl_report_attr_cmd_req(&humidity_measurement_cmd_req);
