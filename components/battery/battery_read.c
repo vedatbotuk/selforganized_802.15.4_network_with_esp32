@@ -26,8 +26,8 @@
 
 const static char *TAG_VOL = "VOLTAGE";
 
-#define VOLTAGE_MAX 9000
-#define VOLTAGE_MIN 7000
+#define VOLTAGE_MAX 3000
+#define VOLTAGE_MIN 1500
 #define CHECK_ARG(VAL)                  \
     do                                  \
     {                                   \
@@ -48,10 +48,15 @@ esp_err_t voltage_calculate_init(void);
 
 uint8_t calc_battery_percentage(int adc)
 {
-    int battery_voltage = (float)adc * 519076 / 470000 / 3300 * VOLTAGE_MAX;
-    ESP_LOGI(TAG_VOL, " ADC Raw: %d", adc);
-    ESP_LOGI(TAG_VOL, "Battery voltage: %d mV", battery_voltage);
-    int battery_percentage = 100 * (battery_voltage - VOLTAGE_MIN) / (VOLTAGE_MAX - VOLTAGE_MIN);
+    /* Calculate for 2x3.7V Batteries*/
+//    int battery_voltage = (float)adc * 519076 / 470000 / 3300 * VOLTAGE_MAX;
+//    int battery_percentage = 100 * (battery_voltage - VOLTAGE_MIN) / (VOLTAGE_MAX - VOLTAGE_MIN);
+
+    /*For 3V no calculating is necassary*/
+    int battery_percentage = 100 * ((float)adc - VOLTAGE_MIN) / (VOLTAGE_MAX - VOLTAGE_MIN);
+
+//    ESP_LOGI(TAG_VOL, " ADC Raw: %d", adc);
+//    ESP_LOGI(TAG_VOL, "Battery percentage: %d %%", battery_percentage);
 
     if (battery_percentage < 0)
         battery_percentage = 0;
@@ -67,6 +72,7 @@ esp_err_t get_battery_level(uint8_t *battery_level, uint8_t *voltage_cal)
 
     *voltage_cal = (uint8_t)(adc_raw[0][0] / 10);
     *battery_level = calc_battery_percentage(adc_raw[0][0]);
+
 
     return ESP_OK;
 }
@@ -97,6 +103,16 @@ esp_err_t voltage_calculate_init(void)
     // if (err != ESP_OK) {
     // return err;
     // }
+
+    return ESP_OK;
+}
+
+esp_err_t voltage_calculate_deinit(void)
+{
+    //Tear Down
+    esp_err_t res = adc_oneshot_del_unit(adc1_handle);
+    if (res != ESP_OK)
+        return res;
 
     return ESP_OK;
 }
