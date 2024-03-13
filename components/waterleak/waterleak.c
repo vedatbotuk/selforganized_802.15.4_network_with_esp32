@@ -1,22 +1,23 @@
-/* 
+/*
  * selforganized_802.15.4_network_with_esp32
  * Copyright (c) 2024 Vedat Botuk.
- * 
- * This program is free software: you can redistribute it and/or modify  
- * it under the terms of the GNU General Public License as published by  
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, version 3.
  *
- * This program is distributed in the hope that it will be useful, but 
- * WITHOUT ANY WARRANTY; without even the implied warranty of 
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU 
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * General Public License for more details.
  *
- * You should have received a copy of the GNU General Public License 
+ * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
 #include "waterleak.h"
 #include "update_cluster.h"
+#include "driver/gpio.h"
 #include "esp_log.h"
 
 #define INPUT_PIN GPIO_NUM_22
@@ -34,15 +35,15 @@ esp_err_t check_waterleak(void)
         zb_report_waterleak(10, 1);
         water_detected = true;
         button_cnt = 0;
-    }
-
-    if (gpio_get_level(INPUT_PIN) == 1 && water_detected == true)
-    {
-        ESP_LOGI(TAG, "Water alarm released");
-        zb_update_waterleak(10, 0);
-        zb_report_waterleak(10, 0);
-        water_detected = false;
-        button_cnt = 0;
+    } else {
+        if (water_detected == true)
+        {
+            ESP_LOGI(TAG, "Water alarm released");
+            zb_update_waterleak(10, 0);
+            zb_report_waterleak(10, 0);
+            water_detected = false;
+            button_cnt = 0;
+        }
     }
 
     /* Every 5 Minutes*/

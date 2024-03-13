@@ -18,9 +18,7 @@
 #ifndef WATERLEAK_H
 #define WATERLEAK_H
 
-#include "driver/gpio.h"
 #include <esp_err.h>
-// #include "update_cluster.h"
 
 #ifdef __cplusplus
 extern "C"

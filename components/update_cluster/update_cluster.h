@@ -18,11 +18,6 @@
 #ifndef ZB_TEMP_SENSOR_H
 #define ZB_TEMP_SENSOR_H
 
-#include "esp_zigbee_core.h"
-#include "esp_log.h"
-#include <stdint.h>
-#include "zcl/esp_zigbee_zcl_power_config.h"
-
 void zb_update_temp(int temperature, uint8_t endpoint);
 void zb_report_temp(uint8_t endpoint);
 void zb_update_hum(int humidity, uint8_t endpoint);

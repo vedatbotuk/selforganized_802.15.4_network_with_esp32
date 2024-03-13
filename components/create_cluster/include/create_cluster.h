@@ -18,10 +18,7 @@
 #ifndef CREATE_CLUSTERS_H
 #define CREATE_CLUSTERS_H
 
-#include <stdio.h>
-#include "create_cluster.h"
 #include "esp_zigbee_core.h"
-#include "esp_log.h"
 
 #ifdef __cplusplus
 extern "C"

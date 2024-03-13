@@ -19,6 +19,7 @@
 #include "light_sleep.h"
 #include "esp_pm.h"
 #include "esp_private/esp_clk.h"
+#include "esp_zigbee_core.h"
 
 esp_err_t esp_zb_power_save_init(int cpu_freq)
 {

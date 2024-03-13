@@ -18,12 +18,6 @@
 #ifndef VOLTAGE_CALCULATE_H
 #define VOLTAGE_CALCULATE_H
 
-#include "freertos/FreeRTOS.h"
-#include "freertos/task.h"
-#include "soc/soc_caps.h"
-#include "esp_log.h"
-#include "esp_adc/adc_oneshot.h"
-
 #ifdef __cplusplus
 extern "C"
 {

@@ -484,10 +484,9 @@ void create_signal_handler_battery_button(esp_zb_app_signal_t signal_struct)
         break;
     case ESP_ZB_COMMON_SIGNAL_CAN_SLEEP:
         ESP_LOGI(TAG_SIGNAL_HANDLER, "Zigbee can sleep");
-        esp_zb_sleep_now();
         if (conn == true)
         {
-            vTaskDelay(pdMS_TO_TICKS(500)); /*This sleep is necessary for the get_button()*/
+            vTaskDelay(pdMS_TO_TICKS(100)); /*This sleep is necessary for the get_button()*/
             if (batt_cnt == 1000)
             {
                 voltage_calculate_init();
@@ -502,6 +501,7 @@ void create_signal_handler_battery_button(esp_zb_app_signal_t signal_struct)
         {
             ESP_LOGI(TAG_SIGNAL_HANDLER, "Device is not connected!");
         }
+        esp_zb_sleep_now();
         break;
     default:
         ESP_LOGI(TAG_SIGNAL_HANDLER, "ZDO signal: %s (0x%x), status: %s", esp_zb_zdo_signal_to_string(sig_type), sig_type, esp_err_to_name(err_status));
