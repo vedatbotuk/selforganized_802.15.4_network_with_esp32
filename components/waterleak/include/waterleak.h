@@ -15,25 +15,21 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef VOLTAGE_CALCULATE_H
-#define VOLTAGE_CALCULATE_H
+#ifndef WATERLEAK_H
+#define WATERLEAK_H
+
+#include <esp_err.h>
 
 #ifdef __cplusplus
 extern "C"
 {
 #endif
 
-    // extern const static char *TAG_VOL;
-    extern const int VOLTAGE_MAX;
-    extern const int VOLTAGE_MIN;
-
-    esp_err_t voltage_calculate_init(void);
-    esp_err_t voltage_calculate_deinit(void);
-    int calc_battery_percentage(int adc);
-    esp_err_t get_battery_level();
+    esp_err_t check_waterleak(void);
+    esp_err_t button_init(void);
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* VOLTAGE_CALCULATE_H */
+#endif /* WATERLEAK_H */

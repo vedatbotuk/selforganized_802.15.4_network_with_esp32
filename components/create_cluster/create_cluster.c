@@ -17,7 +17,6 @@
 
 #include <stdio.h>
 #include "create_cluster.h"
-#include "esp_zigbee_core.h"
 #include "esp_log.h"
 #include "zcl/esp_zigbee_zcl_power_config.h"
 #include "esp_ota_ops.h"

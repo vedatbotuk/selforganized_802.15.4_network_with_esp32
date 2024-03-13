@@ -5,15 +5,15 @@ set(EXTRA_COMPONENT_DIRS
     ${CMAKE_CURRENT_SOURCE_DIR}/../../components/espressif__esp-zboss-lib
     ${CMAKE_CURRENT_SOURCE_DIR}/../../components/espressif__esp-zigbee-lib
     ${CMAKE_CURRENT_SOURCE_DIR}/../../components/ota
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../components/dht22
     ${CMAKE_CURRENT_SOURCE_DIR}/../../components/esp_idf_lib_helpers
     ${CMAKE_CURRENT_SOURCE_DIR}/../../components/ets_sys
     ${CMAKE_CURRENT_SOURCE_DIR}/../../components/update_cluster
     ${CMAKE_CURRENT_SOURCE_DIR}/../../components/create_cluster
     ${CMAKE_CURRENT_SOURCE_DIR}/../../components/sleep
     ${CMAKE_CURRENT_SOURCE_DIR}/../../components/battery
-    ${CMAKE_CURRENT_SOURCE_DIR}/../../components/waterleak
     ${CMAKE_CURRENT_SOURCE_DIR}/../../components/signal_handler
     )
 include($ENV{IDF_PATH}/tools/cmake/project.cmake)
-project(sensor_device_water_detection)
+project(sensor_device_light_sleep)
 
