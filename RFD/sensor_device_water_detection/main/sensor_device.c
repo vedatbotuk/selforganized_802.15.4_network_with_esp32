@@ -30,8 +30,6 @@
 #error Define ZB_ED_ROLE in idf.py menuconfig to compile RFD (End Device) source code.
 #endif
 
-#define CONFIG_EXAMPLE_DATA_GPIO GPIO_NUM_0
-
 static char firmware_version[16] = {7, 'v', 'e', 'r', '0', '.', '1', '3'};
 static const char *TAG = "SENSOR_DEVICE";
 
