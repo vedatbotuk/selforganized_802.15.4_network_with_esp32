@@ -25,13 +25,13 @@ static const char *TAG = "WATERLEAK_CHECK";
 bool water_detected = false;
 uint8_t button_cnt = 0;
 
-esp_err_t check_waterleak(uint8_t endpoint)
+esp_err_t check_waterleak(void)
 {
     if (gpio_get_level(INPUT_PIN) == 0 && water_detected == false)
     {
         ESP_LOGI(TAG, "Water detected");
-        zb_update_waterleak(endpoint, 1);
-        zb_report_waterleak(endpoint, 1);
+        zb_update_waterleak(10, 1);
+        zb_report_waterleak(10, 1);
         water_detected = true;
         button_cnt = 0;
     }
@@ -39,8 +39,8 @@ esp_err_t check_waterleak(uint8_t endpoint)
     if (gpio_get_level(INPUT_PIN) == 1 && water_detected == true)
     {
         ESP_LOGI(TAG, "Water alarm released");
-        zb_update_waterleak(endpoint, 0);
-        zb_report_waterleak(endpoint, 0);
+        zb_update_waterleak(10, 0);
+        zb_report_waterleak(10, 0);
         water_detected = false;
         button_cnt = 0;
     }

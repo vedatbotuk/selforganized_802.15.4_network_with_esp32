@@ -35,7 +35,7 @@ void create_signal_handler_light_sleep_battery();
 void create_signal_handler_deep_sleep(esp_zb_app_signal_t signal_struct);
 void deep_sleep_check();
 void create_signal_handler_mix_sleep(esp_zb_app_signal_t signal_struct);
-
+void create_signal_handler_battery_button(esp_zb_app_signal_t signal_struct);
 
 #ifdef __cplusplus
 }

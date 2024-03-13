@@ -20,14 +20,14 @@
 
 #include "driver/gpio.h"
 #include <esp_err.h>
-#include "update_cluster.h"
+// #include "update_cluster.h"
 
 #ifdef __cplusplus
 extern "C"
 {
 #endif
 
-    esp_err_t check_waterleak(uint8_t endpoint);
+    esp_err_t check_waterleak(void);
     esp_err_t button_init(void);
 
 #ifdef __cplusplus

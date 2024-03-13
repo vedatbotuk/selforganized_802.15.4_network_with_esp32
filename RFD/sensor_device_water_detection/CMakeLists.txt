@@ -12,6 +12,7 @@ set(EXTRA_COMPONENT_DIRS
     ${CMAKE_CURRENT_SOURCE_DIR}/../../components/sleep
     ${CMAKE_CURRENT_SOURCE_DIR}/../../components/battery
     ${CMAKE_CURRENT_SOURCE_DIR}/../../components/waterleak
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../components/signal_handler
     )
 include($ENV{IDF_PATH}/tools/cmake/project.cmake)
 project(sensor_device_water_detection)

@@ -28,9 +28,9 @@
 extern "C" {
 #endif
 
-extern static const char *TAG_OTA;
-extern static const esp_partition_t *s_ota_partition;
-extern static esp_ota_handle_t s_ota_handle;
+// extern static const char *TAG_OTA;
+// extern static const esp_partition_t *s_ota_partition;
+// extern static esp_ota_handle_t s_ota_handle;
 extern size_t ota_data_len_;
 extern uint8_t* ota_header_;
 extern size_t ota_header_size_;
