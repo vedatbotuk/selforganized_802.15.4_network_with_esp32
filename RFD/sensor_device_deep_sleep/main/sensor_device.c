@@ -19,9 +19,7 @@
 #include "nvs_flash.h"
 #include "esp_check.h"
 #include "esp_log.h"
-#include "dht22.h"
-#include "battery_read.c"
-#include "ota.c"
+#include "ota.h"
 #include "deep_sleep.h"
 #include "update_cluster.h"
 #include "create_cluster.h"
@@ -31,50 +29,12 @@
 #error Define ZB_ED_ROLE in idf.py menuconfig to compile RFD (End Device) source code.
 #endif
 
-#if CONFIG_IDF_TARGET_ESP32C6
-#define CONFIG_EXAMPLE_DATA_GPIO GPIO_NUM_2
-#elif CONFIG_IDF_TARGET_ESP32H2
-#define CONFIG_EXAMPLE_DATA_GPIO GPIO_NUM_0
-#endif
-
-#define SENSOR_TYPE DHT_TYPE_AM2301
-
 static char firmware_version[16] = {7, 'v', 'e', 'r', '0', '.', '1', '0'};
 static const char *TAG = "SENSOR_DEVICE";
 
 /********************* Define functions **************************/
-void measure_temperature()
-{
-    float temperature;
-    float humidity;
-    uint8_t battery_level;
-    uint8_t battery_voltage;
-
-    /* Measure temperature loop*/
-    if (dht_read_float_data(SENSOR_TYPE, CONFIG_EXAMPLE_DATA_GPIO, &humidity, &temperature) == ESP_OK)
-    {
-        ESP_LOGI(TAG, "Temperature : %.1f ℃", temperature);
-        ESP_LOGI(TAG, "Humidity : %.1f %%", humidity);
-        zb_update_temp((int16_t)(temperature * 100), SENSOR_DEVICE_ENDPOINT);
-        zb_update_hum((uint16_t)(humidity * 100), SENSOR_DEVICE_ENDPOINT);
-    }
-    else
-    {
-        ESP_LOGW(TAG, "Could not read data from DHT22 Sensor.");
-    }
-
-    if (get_battery_level(&battery_level, &battery_voltage) == ESP_OK) {
-        ESP_LOGI(TAG, "Battery level: %d %%", battery_level);
-        ESP_LOGI(TAG, "Battery voltage: %d mV", battery_voltage);
-        zb_update_battery_level((uint8_t)(2 * battery_level), (uint8_t)(battery_voltage), SENSOR_DEVICE_ENDPOINT);
-    } else {
-        ESP_LOGI(TAG, "Could not read battery level and voltage data.");
-    }
-}
-
-
 void esp_zb_app_signal_handler(esp_zb_app_signal_t *signal_struct){
-    create_signal_handler_mix_sleep(*signal_struct);
+    create_signal_handler(*signal_struct);
 }
 
 static esp_err_t zb_action_handler(esp_zb_core_action_callback_id_t callback_id, const void *message)
@@ -129,10 +89,10 @@ void app_main(void) {
         .host_config = ESP_ZB_DEFAULT_HOST_CONFIG(),
     };
 
-    ESP_ERROR_CHECK(voltage_calculate_init());
+    // signal_handler_init(0b010000);
+
     ESP_ERROR_CHECK(nvs_flash_init());
     ESP_ERROR_CHECK(esp_zb_platform_config(&config));
     zb_deep_sleep_init();
-//    measure_temperature();
     xTaskCreate(esp_zb_task, "Zigbee_main", 4096, NULL, 6, NULL);
 }

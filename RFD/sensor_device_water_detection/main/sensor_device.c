@@ -97,7 +97,7 @@ void app_main(void)
     };
 
     button_init();
-    signal_handler_init(0b11100);
+    signal_handler_init(0b110100);
 
     ESP_ERROR_CHECK(nvs_flash_init());
     ESP_ERROR_CHECK(esp_zb_platform_config(&config));

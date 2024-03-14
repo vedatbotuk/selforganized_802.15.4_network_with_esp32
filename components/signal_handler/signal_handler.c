@@ -18,25 +18,33 @@
 #include "esp_zigbee_core.h"
 
 // Function tomap the value at a specific position in a binary number
-void signal_handler_init(int8_t sensor_map)
-{
-    if ((sensor_map >> 0 & 1) == 1)
-    {
-#define SENSOR_WATERLEAK 1
-    }
-    if ((sensor_map >> 1 & 1) == 1)
-    {
+// void signal_handler_init(int8_t sensor_map)
+// {
+    // if ((sensor_map >> 0 & 1) == 1)
+    // {
+// #define SENSOR_WATERLEAK 1
+    // }
+    // if ((sensor_map >> 1 & 1) == 1)
+    // {
 #define DEEP_SLEEP 1
-    }
-    if ((sensor_map >> 2 & 1) == 1)
-    {
-#define LIGHT_SLEEP 1
-    }
-    if ((sensor_map >> 3 & 1) == 1)
-    {
-#define BATTERY 1
-    }
-}
+    // }
+    // if ((sensor_map >> 2 & 1) == 1)
+    // {
+// #define LIGHT_SLEEP 1
+//     }
+//     if ((sensor_map >> 3 & 1) == 1)
+//     {
+// #define BATTERY 1
+//     }
+//     if ((sensor_map >> 4 & 1) == 1)
+//     {
+// #define SENSOR_TEMPERATURE 1
+//     }
+//     if ((sensor_map >> 5 & 1) == 1)
+//     {
+// #define SENSOR_HUMIDITY 1
+//     }
+// }
 
 #ifdef DEEP_SLEEP
 #include "deep_sleep.h"
@@ -80,7 +88,7 @@ esp_err_t get_battery_data(uint8_t *battlev, uint8_t *volcal)
 }
 #endif
 
-#ifdef DEEP_SLEEP
+#ifdef MIX_SLEEP
 void deep_sleep_check()
 {
     if (deepsleep_cnt >= 10)
@@ -132,7 +140,7 @@ void create_signal_handler(esp_zb_app_signal_t signal_struct)
             /* commissioning failed */
             conn = false;
             ESP_LOGW(TAG_SIGNAL_HANDLER, "Failed to initialize Zigbee stack (status: %d)", err_status);
-#ifdef DEEP_SLEEP
+#ifdef MIX_SLEEP
             esp_zb_scheduler_alarm((esp_zb_callback_t)bdb_start_top_level_commissioning_cb, ESP_ZB_BDB_MODE_NETWORK_STEERING, 1000);
             deep_sleep_check();
 #endif
@@ -154,11 +162,16 @@ void create_signal_handler(esp_zb_app_signal_t signal_struct)
             conn = false;
             ESP_LOGI(TAG_SIGNAL_HANDLER, "Network steering was not successful (status: %d)", err_status);
             esp_zb_scheduler_alarm((esp_zb_callback_t)bdb_start_top_level_commissioning_cb, ESP_ZB_BDB_MODE_NETWORK_STEERING, 1000);
-#ifdef DEEP_SLEEP
+#ifdef MIX_SLEEP
             esp_zb_scheduler_alarm((esp_zb_callback_t)bdb_start_top_level_commissioning_cb, ESP_ZB_BDB_MODE_NETWORK_STEERING, 1000);
             deep_sleep_check();
 #endif
         }
+#ifdef DEEP_SLEEP
+        /* Start the one-shot timer */
+        ESP_LOGI(TAG_SIGNAL_HANDLER, "Start one-shot timer for %ds to enter the deep sleep", before_deep_sleep_time_sec);
+        start_deep_sleep();
+#endif
         break;
     case ESP_ZB_ZDO_SIGNAL_LEAVE:
         leave_params = (esp_zb_zdo_signal_leave_params_t *)esp_zb_app_signal_get_params(p_sg_p);
@@ -171,10 +184,11 @@ void create_signal_handler(esp_zb_app_signal_t signal_struct)
 #ifdef LIGHT_SLEEP
     case ESP_ZB_COMMON_SIGNAL_CAN_SLEEP:
         ESP_LOGI(TAG_SIGNAL_HANDLER, "Zigbee can sleep");
-#ifdef SENSOR_WATERLEAK
         if (conn == true)
         {
-            vTaskDelay(pdMS_TO_TICKS(100)); /*This sleep is necessary for the get_button()*/
+#ifdef SENSOR_TEMPERATURE
+#ifdef SENSOR_HUMIDITY
+#ifdef SENSOR_WATERLEAK
 #ifdef BATTERY
             if (batt_cnt == 1000)
             {
@@ -185,13 +199,18 @@ void create_signal_handler(esp_zb_app_signal_t signal_struct)
             }
             batt_cnt++;
 #endif
+            vTaskDelay(pdMS_TO_TICKS(100)); /*This sleep is necessary for the get_button()*/
             check_waterleak();
+#endif
+// TODO: Humidity function
+#endif
+// TODO: Temperature function
+#endif
         }
         else
         {
             ESP_LOGI(TAG_SIGNAL_HANDLER, "Device is not connected!");
         }
-#endif
         esp_zb_sleep_now();
         break;
 #endif
