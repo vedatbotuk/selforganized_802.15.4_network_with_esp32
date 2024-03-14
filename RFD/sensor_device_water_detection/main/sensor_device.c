@@ -36,7 +36,7 @@ static const char *TAG = "SENSOR_DEVICE";
 /********************* Define functions **************************/
 void esp_zb_app_signal_handler(esp_zb_app_signal_t *signal_struct)
 {
-    create_signal_handler_battery_button(*signal_struct);
+    create_signal_handler(*signal_struct);
 }
 
 static esp_err_t zb_action_handler(esp_zb_core_action_callback_id_t callback_id, const void *message)
@@ -97,6 +97,7 @@ void app_main(void)
     };
 
     button_init();
+    signal_handler_init(0b11100);
 
     ESP_ERROR_CHECK(nvs_flash_init());
     ESP_ERROR_CHECK(esp_zb_platform_config(&config));
