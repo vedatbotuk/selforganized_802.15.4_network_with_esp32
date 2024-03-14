@@ -89,7 +89,7 @@ void app_main(void) {
         .host_config = ESP_ZB_DEFAULT_HOST_CONFIG(),
     };
 
-    // signal_handler_init(0b010000);
+    signal_handler_init(0b000010);
 
     ESP_ERROR_CHECK(nvs_flash_init());
     ESP_ERROR_CHECK(esp_zb_platform_config(&config));

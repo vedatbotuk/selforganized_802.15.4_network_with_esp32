@@ -17,34 +17,31 @@
 
 #include "esp_zigbee_core.h"
 
-// Function tomap the value at a specific position in a binary number
-// void signal_handler_init(int8_t sensor_map)
-// {
-    // if ((sensor_map >> 0 & 1) == 1)
-    // {
-// #define SENSOR_WATERLEAK 1
-    // }
-    // if ((sensor_map >> 1 & 1) == 1)
-    // {
+const char *TAG_SIGNAL_HANDLER = "SIGNAL";
+
+#if (SEN_MAP >> 0 & 1) == 1
+#define SENSOR_WATERLEAK 1
+#endif
+
+#if (SEN_MAP >> 1 & 1) == 1
 #define DEEP_SLEEP 1
-    // }
-    // if ((sensor_map >> 2 & 1) == 1)
-    // {
-// #define LIGHT_SLEEP 1
-//     }
-//     if ((sensor_map >> 3 & 1) == 1)
-//     {
-// #define BATTERY 1
-//     }
-//     if ((sensor_map >> 4 & 1) == 1)
-//     {
-// #define SENSOR_TEMPERATURE 1
-//     }
-//     if ((sensor_map >> 5 & 1) == 1)
-//     {
-// #define SENSOR_HUMIDITY 1
-//     }
-// }
+#endif
+
+#if (SEN_MAP >> 2 & 1) == 1
+#define LIGHT_SLEEP 1
+#endif
+
+#if (SEN_MAP >> 3 & 1) == 1
+#define BATTERY 1
+#endif
+
+#if (SEN_MAP >> 4 & 1) == 1
+#define SENSOR_TEMPERATURE 1
+#endif
+
+#if (SEN_MAP >> 5 & 1) == 1
+#define SENSOR_HUMIDITY 1
+#endif
 
 #ifdef DEEP_SLEEP
 #include "deep_sleep.h"
@@ -55,11 +52,12 @@
 #ifdef SENSOR_WATERLEAK
 #include "waterleak.h"
 #endif
+// TODO: Include Temperature
+// TODO: Include Humidity
 
-const char *TAG_SIGNAL_HANDLER = "SIGNAL";
 bool conn = false;
 
-#ifdef DEEP_SLEEP
+#ifdef MIX_SLEEP
 uint8_t deepsleep_cnt = 0;
 #endif
 
@@ -132,6 +130,11 @@ void create_signal_handler(esp_zb_app_signal_t signal_struct)
             else
             {
                 conn = true;
+#ifdef DEEP_SLEEP
+                /* Start the one-shot timer */
+                ESP_LOGI(TAG_SIGNAL_HANDLER, "Start one-shot timer for %ds to enter the deep sleep", before_deep_sleep_time_sec);
+                start_deep_sleep();
+#endif
                 ESP_LOGI(TAG_SIGNAL_HANDLER, "Device rebooted");
             }
         }
@@ -156,6 +159,11 @@ void create_signal_handler(esp_zb_app_signal_t signal_struct)
                      extended_pan_id[7], extended_pan_id[6], extended_pan_id[5], extended_pan_id[4],
                      extended_pan_id[3], extended_pan_id[2], extended_pan_id[1], extended_pan_id[0],
                      esp_zb_get_pan_id(), esp_zb_get_current_channel(), esp_zb_get_short_address());
+#ifdef DEEP_SLEEP
+            /* Start the one-shot timer */
+            ESP_LOGI(TAG_SIGNAL_HANDLER, "Start one-shot timer for %ds to enter the deep sleep", before_deep_sleep_time_sec);
+            start_deep_sleep();
+#endif
         }
         else
         {
@@ -167,11 +175,6 @@ void create_signal_handler(esp_zb_app_signal_t signal_struct)
             deep_sleep_check();
 #endif
         }
-#ifdef DEEP_SLEEP
-        /* Start the one-shot timer */
-        ESP_LOGI(TAG_SIGNAL_HANDLER, "Start one-shot timer for %ds to enter the deep sleep", before_deep_sleep_time_sec);
-        start_deep_sleep();
-#endif
         break;
     case ESP_ZB_ZDO_SIGNAL_LEAVE:
         leave_params = (esp_zb_zdo_signal_leave_params_t *)esp_zb_app_signal_get_params(p_sg_p);
@@ -187,8 +190,12 @@ void create_signal_handler(esp_zb_app_signal_t signal_struct)
         if (conn == true)
         {
 #ifdef SENSOR_TEMPERATURE
+// TODO: Temperature function
+#endif
 #ifdef SENSOR_HUMIDITY
-#ifdef SENSOR_WATERLEAK
+// TODO: Humidity function
+#endif
+
 #ifdef BATTERY
             if (batt_cnt == 1000)
             {
@@ -199,12 +206,9 @@ void create_signal_handler(esp_zb_app_signal_t signal_struct)
             }
             batt_cnt++;
 #endif
+#ifdef SENSOR_WATERLEAK
             vTaskDelay(pdMS_TO_TICKS(100)); /*This sleep is necessary for the get_button()*/
             check_waterleak();
-#endif
-// TODO: Humidity function
-#endif
-// TODO: Temperature function
 #endif
         }
         else
