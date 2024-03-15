@@ -27,6 +27,7 @@ extern "C"
     extern const char *TAG_SIGNAL_HANDLER;
     extern uint8_t deepsleep_cnt;
 
+    // void sensor_map_status();
     void bdb_start_top_level_commissioning_cb(uint8_t mode_mask);
     bool connection_status();
     esp_err_t get_battery_data();

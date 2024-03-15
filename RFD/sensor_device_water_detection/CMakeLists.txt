@@ -5,7 +5,7 @@ set(EXTRA_COMPONENT_DIRS
     ${CMAKE_CURRENT_SOURCE_DIR}/../../components
     )
 #### Define Macros
-add_definitions(-DSENSOR_MAP=0b0000000)
+add_definitions(-DSENSOR_MAP=0b1001101)
 add_definitions(-DDEVICE_ENDPOINT=10)
 
 ## Channel and TX-Power
