@@ -40,8 +40,8 @@ esp_err_t check_waterleak(void)
     if (gpio_get_level(INPUT_PIN) == 0 && _water_detected == false)
     {
         ESP_LOGI(TAG, "Water detected");
-        zb_update_waterleak(10, 1);
-        zb_report_waterleak(10, 1);
+        zb_update_waterleak(1);
+        zb_report_waterleak(1);
         _water_detected = true;
         _button_cnt = 0;
         return ESP_OK;
@@ -51,8 +51,8 @@ esp_err_t check_waterleak(void)
     {
 
         ESP_LOGI(TAG, "Water alarm released");
-        zb_update_waterleak(10, 0);
-        zb_report_waterleak(10, 0);
+        zb_update_waterleak(0);
+        zb_report_waterleak(0);
         _water_detected = false;
         _button_cnt = 0;
         return ESP_OK;

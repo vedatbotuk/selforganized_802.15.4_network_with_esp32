@@ -22,10 +22,9 @@
 
 static const char *TAG = "UPDATE_WATERLEAK_CLUSTER";
 
-void zb_update_waterleak(uint8_t endpoint, uint16_t leak)
+void zb_update_waterleak(uint16_t leak)
 {
-    esp_zb_zcl_status_t state = esp_zb_zcl_set_attribute_val(endpoint, ESP_ZB_ZCL_CLUSTER_ID_IAS_ZONE, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_IAS_ZONE_ZONESTATUS_ID, &leak, false);
-
+    esp_zb_zcl_status_t state = esp_zb_zcl_set_attribute_val(DEVICE_ENDPOINT, ESP_ZB_ZCL_CLUSTER_ID_IAS_ZONE, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_IAS_ZONE_ZONESTATUS_ID, &leak, false);
 
     /* Check for error */
     if (state != ESP_ZB_ZCL_STATUS_SUCCESS) {
@@ -38,10 +37,10 @@ void zb_update_waterleak(uint8_t endpoint, uint16_t leak)
 }
 
 
-void zb_report_waterleak(uint8_t endpoint, uint16_t leak)
+void zb_report_waterleak(uint16_t leak)
 {
     static esp_zb_zcl_ias_zone_status_change_notif_cmd_t waterleak_chg_not_cmd = {};
-    waterleak_chg_not_cmd.zcl_basic_cmd.src_endpoint = endpoint;
+    waterleak_chg_not_cmd.zcl_basic_cmd.src_endpoint = DEVICE_ENDPOINT;
     waterleak_chg_not_cmd.address_mode = ESP_ZB_APS_ADDR_MODE_DST_ADDR_ENDP_NOT_PRESENT;
     waterleak_chg_not_cmd.zone_status = leak;
     waterleak_chg_not_cmd.zone_id = ESP_ZB_ZCL_CMD_IAS_ZONE_ZONE_STATUS_CHANGE_NOT_ID;

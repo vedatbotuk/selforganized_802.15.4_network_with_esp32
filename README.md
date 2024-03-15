@@ -30,6 +30,6 @@ BATTERY           | 0 or 1
 LIGHT_SLEEP       | 0 or 1
 DEEP_SLEEP        | 0 or 1
 SENSOR_WATERLEAK  | 0 or 1
-
+OTA_UPGRADE       | 0 or 1
 For example use a RFD, which suppert temperature, humidity and light sleep.
 ```110100```

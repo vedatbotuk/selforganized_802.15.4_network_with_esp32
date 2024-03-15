@@ -19,27 +19,27 @@
 
 const char *TAG_SIGNAL_HANDLER = "SIGNAL";
 
-#if (SEN_MAP >> 0 & 1) == 1
+#if (SENSOR_MAP >> 0 & 1) == 1
 #define SENSOR_WATERLEAK 1
 #endif
 
-#if (SEN_MAP >> 1 & 1) == 1
+#if (SENSOR_MAP >> 1 & 1) == 1
 #define DEEP_SLEEP 1
 #endif
 
-#if (SEN_MAP >> 2 & 1) == 1
+#if (SENSOR_MAP >> 2 & 1) == 1
 #define LIGHT_SLEEP 1
 #endif
 
-#if (SEN_MAP >> 3 & 1) == 1
+#if (SENSOR_MAP >> 3 & 1) == 1
 #define BATTERY 1
 #endif
 
-#if (SEN_MAP >> 4 & 1) == 1
+#if (SENSOR_MAP >> 4 & 1) == 1
 #define SENSOR_TEMPERATURE 1
 #endif
 
-#if (SEN_MAP >> 5 & 1) == 1
+#if (SENSOR_MAP >> 5 & 1) == 1
 #define SENSOR_HUMIDITY 1
 #endif
 

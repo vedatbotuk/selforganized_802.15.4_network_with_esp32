@@ -79,7 +79,7 @@ esp_err_t get_battery_level()
 
     ESP_LOGI(TAG_VOL, "Battery level: %d %%", battery_lev);
     ESP_LOGI(TAG_VOL, "Battery voltage: %d mV", battery_vol);
-    zb_update_battery_level((uint8_t)(2 * battery_lev), (uint8_t)(battery_vol), 10);
+    zb_update_battery_level((uint8_t)(2 * battery_lev), (uint8_t)(battery_vol));
 
     return ESP_OK;
 }
