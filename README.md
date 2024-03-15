@@ -24,12 +24,12 @@ equipped with:
 # Signal handlar maping
 Sensor or feature | Binary value
 ------------------|-------------
-SENSOR_WATERLEAK  | 0 or 1
-DEEP_SLEEP        | 0 or 1
-LIGHT_SLEEP       | 0 or 1
-BATTERY           | 0 or 1
-Temperature       | 0 or 1
 Humidity          | 0 or 1
+Temperature       | 0 or 1
+BATTERY           | 0 or 1
+LIGHT_SLEEP       | 0 or 1
+DEEP_SLEEP        | 0 or 1
+SENSOR_WATERLEAK  | 0 or 1
 
 For example use a RFD, which suppert temperature, humidity and light sleep.
-```001011```
+```110100```
