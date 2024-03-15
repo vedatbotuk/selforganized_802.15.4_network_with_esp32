@@ -5,5 +5,7 @@ set(EXTRA_COMPONENT_DIRS
     ${CMAKE_CURRENT_SOURCE_DIR}/../../components
     )
 add_definitions(-DSEN_MAP=0b001101)
+# TODO
 include($ENV{IDF_PATH}/tools/cmake/project.cmake)
+# TODO:Another macros
 project(sensor_device_water_detection)
